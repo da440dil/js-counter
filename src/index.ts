@@ -26,7 +26,7 @@ export interface Storage {
  * Params defines parameters for creating new Counter.
  */
 export type Params = {
-  /** TTL of key. */
+  /** TTL of key in milliseconds. */
   ttl: number;
   /** Maximum key value (should be greater than 0, by default equals 1). */
   limit?: number;
