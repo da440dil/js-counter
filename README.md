@@ -6,8 +6,8 @@ Distributed rate limiting with pluggable storage.
 
 ```javascript
 import { createClient } from 'redis'
-import { createStorage } from 'js-counter/redis'
-import { createCounter, Counter } from 'js-counter'
+import { createStorage } from '@da440dil/js-counter/redis'
+import { createCounter, Counter } from '@da440dil/js-counter'
 
 class MyCounter {
   private _counter: Counter;
