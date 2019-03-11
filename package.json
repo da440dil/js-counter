@@ -1,5 +1,5 @@
 {
-  "name": "js-counter",
+  "name": "@da440dil/js-counter",
   "version": "0.0.0",
   "description": "Distributed rate limiting with pluggable storage",
   "main": "lib/index.js",
