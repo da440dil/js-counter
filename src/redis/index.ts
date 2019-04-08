@@ -1,3 +1,4 @@
+import { Storage } from '../.'
 import { RedisClient } from 'redis'
 
 /**
@@ -11,12 +12,7 @@ export const ErrKeyNameClash = 'Key name clash'
 
 const incr = 'local v = redis.call("incr", KEYS[1]) if v > tonumber(ARGV[1]) then return redis.call("pttl", KEYS[1]) end if v == 1 then redis.call("pexpire", KEYS[1], ARGV[2]) end return nil'
 
-/**
- * Storage implements storage using Redis.
- */
-export interface Storage {
-  incr(key: string, limit: number, ttl: number): Promise<number>;
-}
+export { Storage }
 
 /**
  * Creates new Storage.
