@@ -1,6 +1,6 @@
 {
   "name": "@da440dil/js-counter",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Distributed rate limiting with pluggable storage",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
