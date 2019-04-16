@@ -6,9 +6,10 @@ Distributed rate limiting with pluggable storage.
 
 ```javascript
 import { createClient } from 'redis'
-import { createStorage } from '@da440dil/js-counter/lib/redis'
 import { createCounter, Counter } from '@da440dil/js-counter'
+import { Storage } from '@da440dil/js-counter/lib/redis'
 
+// Wrapper to log output of Counter methods call
 class MyCounter {
   private _counter: Counter;
   private _key: string;
@@ -28,9 +29,7 @@ class MyCounter {
   }
 }
 
-main()
-
-async function main() {
+(async function main() {
   const db = 10
   const limit = 2
   const ttl = 100
@@ -38,7 +37,7 @@ async function main() {
   // Create Redis client
   const client = createClient({ db: db })
   // Create Redis storage
-  const storage = createStorage(client)
+  const storage = new Storage(client)
   const params = { limit: limit, ttl: ttl }
   // Create first counter
   const counter1 = new MyCounter(createCounter(storage, params), key, 1)
@@ -50,13 +49,13 @@ async function main() {
   await counter1.count() // Counter#1 has reached the limit, retry after 96 ms
   await counter2.count() // Counter#2 has reached the limit, retry after 95 ms
   await sleep(200)
-  console.log("Timeout 200 ms is up")
+  console.log('Timeout 200 ms is up')
   await counter1.count() // Counter#1 has counted the key
   await counter2.count() // Counter#2 has counted the key
 
   // Close Redis connection
   client.quit()
-}
+})()
 
 function sleep(time: number): Promise<void> {
   return new Promise((resolve) => {

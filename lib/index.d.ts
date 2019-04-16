@@ -1,3 +1,7 @@
+/** ErrInvalidTTL is the error message returned when createCounter receives invalid value of ttl. */
+export declare const ErrInvalidTTL = "ttl must be an integer greater than zero";
+/** ErrInvalidLimit is the error message returned when createCounter receives invalid value of limit. */
+export declare const ErrInvalidLimit = "limit must be an integer greater than zero";
 /**
  * Counter implements distributed rate limiting.
  */
@@ -21,17 +25,13 @@ export interface Storage {
     incr(key: string, limit: number, ttl: number): Promise<number>;
 }
 /**
- * Params defines parameters for creating new Counter.
- */
-export declare type Params = {
-    /** TTL of key in milliseconds. */
-    ttl: number;
-    /** Maximum key value (should be greater than 0, by default equals 1). */
-    limit?: number;
-    /** Prefix of key. */
-    prefix?: string;
-};
-/**
  * Creates new Counter.
  */
-export declare function createCounter(storage: Storage, params: Params): Counter;
+export declare function createCounter(storage: Storage, { ttl, limit, prefix }: {
+    /** TTL of key in milliseconds (must be greater than 0). */
+    ttl: number;
+    /** Maximum key value (must be greater than 0, by default equals 1). */
+    limit?: number;
+    /** Prefix of a key. */
+    prefix?: string;
+}): Counter;

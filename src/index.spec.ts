@@ -1,104 +1,63 @@
 import 'mocha'
 import assert from 'assert'
-import { createClient, RedisClient } from 'redis'
-import * as RedisStorage from './redis'
-import * as MemoryStorage from './memory'
-import { createCounter, Counter } from '.'
+import sinon from 'sinon'
+import {
+  createCounter,
+  Storage,
+  ErrInvalidTTL,
+  ErrInvalidLimit
+} from '.'
 
-describe('counter with redis storage', () => {
-  let client: RedisClient
-  let storage: RedisStorage.Storage
-  let couter: Counter
+const key = 'key'
+const value = -1
+const ttl = 1000
+const limit = 5
+const prefix = 'count#'
 
-  const db = 10
-  const key = 'key'
-  const limit = 2
-  const ttl = 1000
+describe('createCounter', () => {
+  const storage = <Storage>{}
 
-  before(async () => {
-    client = createClient({ db: db })
-    await removeKey(client, key)
-    storage = RedisStorage.createStorage(client)
-    couter = createCounter(storage, { limit: limit, ttl: ttl })
-  })
-
-  after(async () => {
-    await removeKey(client, key)
-    client.quit()
-  })
-
-  it('count should return -1', async () => {
-    const v = await couter.count(key)
-    assert(v === -1)
-  })
-
-  it('count should return -1', async () => {
-    const v = await couter.count(key)
-    assert(v === -1)
-  })
-
-  it('count should return v >= 0 && v <= ttl', async () => {
-    const v = await couter.count(key)
-    assert(v >= 0 && v <= ttl)
-  })
-
-  it('delete key', async () => {
-    await removeKey(client, key)
-  })
-
-  it('count should return -1', async () => {
-    const v = await couter.count(key)
-    assert(v === -1)
-  })
-})
-
-describe('couter with memory storage', () => {
-  let storage: MemoryStorage.Storage
-  let couter: Counter
-
-  const key = 'key'
-  const limit = 2
-  const ttl = 1000
-
-  before(() => {
-    storage = MemoryStorage.createStorage(ttl)
-    couter = createCounter(storage, { limit: limit, ttl: ttl })
-  })
-
-  after(() => {
-    storage.quit()
-  })
-
-  it('count should return -1', async () => {
-    const v = await couter.count(key)
-    assert(v === -1)
-  })
-
-  it('count should return -1', async () => {
-    const v = await couter.count(key)
-    assert(v === -1)
-  })
-
-  it('count should return v >= 0 && v <= ttl', async () => {
-    const v = await couter.count(key)
-    assert(v >= 0 && v <= ttl)
-  })
-
-  it('delete key', () => {
-    storage.del(key)
-  })
-
-  it('count should return -1', async () => {
-    const v = await couter.count(key)
-    assert(v === -1)
-  })
-})
-
-function removeKey(client: RedisClient, key: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    client.del(key, (err) => {
-      if (err) return reject(err)
-      resolve()
+  it('should create Counter', () => {
+    assert.doesNotThrow(() => {
+      createCounter(storage, { ttl, limit, prefix })
     })
   })
-}
+
+  it('should throw if ttl is less than or equals to zero', () => {
+    assert.throws(() => {
+      createCounter(storage, { ttl: 0, limit, prefix })
+    }, new Error(ErrInvalidTTL))
+  })
+
+  it('should throw if type of ttl is not integer', () => {
+    assert.throws(() => {
+      createCounter(storage, { ttl: 4.2, limit, prefix })
+    }, new Error(ErrInvalidTTL))
+  })
+
+  it('should throw if limit is less than or equals to zero', () => {
+    assert.throws(() => {
+      createCounter(storage, { ttl, limit: 0, prefix })
+    }, new Error(ErrInvalidLimit))
+  })
+
+  it('should throw if type of limit is not integer', () => {
+    assert.throws(() => {
+      createCounter(storage, { ttl, limit: 4.2, prefix })
+    }, new Error(ErrInvalidLimit))
+  })
+})
+
+describe('Counter', () => {
+  const storage = <Storage>{}
+  const incr = sinon.stub().resolves(value)
+  storage.incr = incr
+
+  const counter = createCounter(storage, { ttl, limit, prefix })
+
+  it('should count', async () => {
+    const v = await counter.count(key)
+    assert(v === value)
+    assert(incr.calledOnceWithExactly(prefix + key, limit, ttl))
+  })
+})
