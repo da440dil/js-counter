@@ -6,7 +6,7 @@ Distributed rate limiting with pluggable storage.
 
 ```javascript
 import { createClient } from 'redis'
-import { createCounter, Counter } from '@da440dil/js-counter'
+import { Counter } from '@da440dil/js-counter'
 import { Storage } from '@da440dil/js-counter/lib/redis'
 
 // Wrapper to log output of Counter methods call
@@ -40,9 +40,9 @@ class MyCounter {
   const storage = new Storage(client)
   const params = { limit: limit, ttl: ttl }
   // Create first counter
-  const counter1 = new MyCounter(createCounter(storage, params), key, 1)
+  const counter1 = new MyCounter(new Counter(storage, params), key, 1)
   // Create second counter
-  const counter2 = new MyCounter(createCounter(storage, params), key, 2)
+  const counter2 = new MyCounter(new Counter(storage, params), key, 2)
 
   await counter1.count() // Counter#1 has counted the key
   await counter2.count() // Counter#2 has counted the key
