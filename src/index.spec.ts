@@ -75,12 +75,36 @@ describe('Counter', () => {
     assert(incr.calledOnceWithExactly(prefix + key, limit, ttl))
   })
 
-  it('should retry count', async () => {
-    const incr = sinon.stub().resolves(1)
+  it('should not retry count if storage.incr returns value which is greater than retryDelay', async () => {
+    const n = retryDelay + 1
+    const incr = sinon.stub().resolves(n)
     storage.incr = incr
 
     const v = await counter.count(key)
-    assert(v === 1)
-    assert(incr.calledWithExactly(prefix + key, limit, ttl))
+    assert(v === n)
+    assert(incr.calledOnceWithExactly(prefix + key, limit, ttl))
+  })
+
+  it('should not retry count if storage.incr returns value which is equal to retryDelay', async () => {
+    const n = retryDelay
+    const incr = sinon.stub().resolves(n)
+    storage.incr = incr
+
+    const v = await counter.count(key)
+    assert(v === n)
+    assert(incr.calledOnceWithExactly(prefix + key, limit, ttl))
+  })
+
+  it('should retry count if storage.incr returns value which is less than retryDelay', async () => {
+    const n = retryDelay - 1
+    const incr = sinon.stub().resolves(n)
+    storage.incr = incr
+
+    const v = await counter.count(key)
+    assert(v === n)
+    assert(incr.calledTwice)
+    const expected = [prefix + key, limit, ttl]
+    assert.deepStrictEqual(incr.getCall(0).args, expected)
+    assert.deepStrictEqual(incr.getCall(1).args, expected)
   })
 })
