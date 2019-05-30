@@ -6,25 +6,29 @@ Distributed rate limiting with pluggable storage.
 
 ```javascript
 import { createClient } from 'redis'
-import { Counter } from '@da440dil/js-counter'
+import { Counter, CounterError } from '@da440dil/js-counter'
 import { Storage } from '@da440dil/js-counter/lib/redis'
 
-// Wrapper to log output of Counter methods call
+// Decorator to log output of Counter methods call
 class MyCounter {
-  private _counter: Counter;
-  private _key: string;
-  private _id: number;
+  private _counter: Counter
+  private _key: string
+  private _id: number
   constructor(counter: Counter, key: string, id: number) {
     this._counter = counter
     this._key = key
     this._id = id
   }
-  async count(): Promise<void> {
-    const v = await this._counter.count(this._key)
-    if (v === -1) {
+  public async count(): Promise<void> {
+    try {
+      await this._counter.count(this._key)
       console.log(`Counter#${this._id} has counted the key`)
-    } else {
-      console.log(`Counter#${this._id} has reached the limit, retry after ${v} ms`)
+    } catch (err) {
+      if (err instanceof CounterError) {
+        console.log(`Counter#${this._id} has reached the limit, retry after ${err.ttl} ms`)
+      } else {
+        throw err
+      }
     }
   }
 }
@@ -35,10 +39,10 @@ class MyCounter {
   const ttl = 100
   const key = 'key'
   // Create Redis client
-  const client = createClient({ db: db })
+  const client = createClient({ db })
   // Create Redis storage
   const storage = new Storage(client)
-  const params = { limit: limit, ttl: ttl }
+  const params = { limit, ttl }
   // Create first counter
   const counter1 = new MyCounter(new Counter(storage, params), key, 1)
   // Create second counter
@@ -46,8 +50,8 @@ class MyCounter {
 
   await counter1.count() // Counter#1 has counted the key
   await counter2.count() // Counter#2 has counted the key
-  await counter1.count() // Counter#1 has reached the limit, retry after 96 ms
-  await counter2.count() // Counter#2 has reached the limit, retry after 95 ms
+  await counter1.count() // Counter#1 has reached the limit, retry after 97 ms
+  await counter2.count() // Counter#2 has reached the limit, retry after 96 ms
   await sleep(200)
   console.log('Timeout 200 ms is up')
   await counter1.count() // Counter#1 has counted the key
