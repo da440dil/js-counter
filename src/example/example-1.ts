@@ -1,8 +1,8 @@
 import { createClient } from 'redis'
-import { Counter, CounterError } from './counter'
-import { Storage } from './redis'
+import { Counter, CounterError } from '../counter'
+import { Storage } from '../redis'
 
-// Wrapper to log output of Counter methods call
+// Decorator to log output of Counter methods call
 class MyCounter {
   private _counter: Counter
   private _key: string

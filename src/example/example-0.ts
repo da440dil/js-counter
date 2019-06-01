@@ -1,13 +1,6 @@
-# js-counter
-
-Distributed rate limiting with pluggable storage.
-
-## Example
-
-```javascript
 import { createClient } from 'redis'
-import { Counter, CounterError } from '@da440dil/js-counter'
-import { Storage } from '@da440dil/js-counter/lib/redis'
+import { Counter, CounterError } from '../counter'
+import { Storage } from '../redis'
 
 (async function main() {
   const db = 10
@@ -37,4 +30,3 @@ import { Storage } from '@da440dil/js-counter/lib/redis'
   // Close Redis connection
   client.quit()
 })()
-```
