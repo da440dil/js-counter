@@ -26,6 +26,7 @@ export class CounterError extends Error {
     super(ErrTooManyRequests)
     this._ttl = ttl
   }
+  /** TTL of a key in milliseconds. */
   get ttl() {
     return this._ttl
   }
@@ -41,7 +42,7 @@ export class Counter {
   private _prefix: string
   constructor(storage: Storage, { ttl, limit = 1, prefix = '' }: {
     /**
-     * TTL of key in milliseconds.
+     * TTL of a key in milliseconds.
      * Must be greater than 0.
      */
     ttl: number;
@@ -64,11 +65,7 @@ export class Counter {
     this._limit = limit
     this._prefix = prefix
   }
-  /**
-   * Increments key value.
-   * Returns -1 if key value less than or equal limit.
-   * Returns ttl in milliseconds if key value greater than limit.
-   */
+  /** Increments key value. Throws CounterError on failure. */
   public async count(key: string): Promise<void> {
     const v = await this._storage.incr(this._prefix + key, this._limit, this._ttl)
     if (v === -1) {

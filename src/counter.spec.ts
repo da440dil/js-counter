@@ -27,9 +27,12 @@ it('should count', async () => {
 
 it('should throw CounterError if count failed', async () => {
   const ttl = 42
+  const err = new CounterError(ttl)
+  expect(err.ttl).toBe(ttl)
+
   const incr = jest.fn().mockResolvedValue(ttl)
   storage.incr = incr
 
   const counter = new Counter(storage, { ttl: 1, limit: 1 })
-  await expect(counter.count(key)).rejects.toThrow(new CounterError(ttl))
+  await expect(counter.count(key)).rejects.toThrow(err)
 })
