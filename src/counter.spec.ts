@@ -6,7 +6,7 @@ import {
   CounterError,
 } from './counter'
 
-const storage = {} as Storage
+const storage = {} as jest.Mocked<Storage>
 const key = 'key'
 
 it('should throw Error if got invalid ttl parameter', () => {
@@ -18,8 +18,7 @@ it('should throw Error if got invalid limit parameter', () => {
 })
 
 it('should count', async () => {
-  const incr = jest.fn().mockResolvedValue(-1)
-  storage.incr = incr
+  storage.incr = jest.fn().mockResolvedValue(-1)
 
   const counter = new Counter(storage, { ttl: 1, limit: 1 })
   await expect(counter.count(key)).resolves.toBe(undefined)
@@ -30,8 +29,7 @@ it('should throw CounterError if count failed', async () => {
   const err = new CounterError(ttl)
   expect(err.ttl).toBe(ttl)
 
-  const incr = jest.fn().mockResolvedValue(ttl)
-  storage.incr = incr
+  storage.incr = jest.fn().mockResolvedValue(ttl)
 
   const counter = new Counter(storage, { ttl: 1, limit: 1 })
   await expect(counter.count(key)).rejects.toThrow(err)
