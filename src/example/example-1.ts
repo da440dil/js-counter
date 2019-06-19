@@ -1,6 +1,5 @@
 import { createClient } from 'redis'
-import { Counter, CounterError } from '../counter'
-import { Storage } from '../redis'
+import Counter from '..'
 
 // Decorator to log output of Counter methods call
 class MyCounter {
@@ -17,7 +16,7 @@ class MyCounter {
       await this._counter.count(this._key)
       console.log(`Counter#${this._id} has counted the key`)
     } catch (err) {
-      if (err instanceof CounterError) {
+      if (err instanceof Counter.Error) {
         console.log(`Counter#${this._id} has reached the limit, retry after ${err.ttl} ms`)
       } else {
         throw err
@@ -27,19 +26,13 @@ class MyCounter {
 }
 
 (async function main() {
-  const db = 10
+  const client = createClient()
   const limit = 2
   const ttl = 100
+  const params = { ttl, limit }
   const key = 'key'
-  // Create Redis client
-  const client = createClient({ db })
-  // Create Redis storage
-  const storage = new Storage(client)
-  const params = { limit, ttl }
-  // Create first counter
-  const counter1 = new MyCounter(new Counter(storage, params), key, 1)
-  // Create second counter
-  const counter2 = new MyCounter(new Counter(storage, params), key, 2)
+  const counter1 = new MyCounter(Counter(client, params), key, 1)
+  const counter2 = new MyCounter(Counter(client, params), key, 2)
 
   await counter1.count() // Counter#1 has counted the key
   await counter2.count() // Counter#2 has counted the key
@@ -50,7 +43,6 @@ class MyCounter {
   await counter1.count() // Counter#1 has counted the key
   await counter2.count() // Counter#2 has counted the key
 
-  // Close Redis connection
   client.quit()
 })()
 

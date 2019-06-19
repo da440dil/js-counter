@@ -1,8 +1,8 @@
 {
   "name": "@da440dil/js-counter",
   "version": "0.0.7",
-  "description": "Distributed rate limiting with pluggable storage",
-  "main": "lib/counter.js",
+  "description": "Distributed rate limiting using Redis",
+  "main": "lib/index.js",
   "scripts": {
     "test": "jest --config jest.config.json --runInBand",
     "test:v": "jest --config jest.config.json --runInBand --verbose",
@@ -11,8 +11,8 @@
     "lint": "tslint -p tsconfig.json -c tslint.json",
     "build": "tsc -p tsconfig.build.json",
     "purge": "rimraf lib",
-    "preversion": "npm test",
-    "prepublishOnly": "npm run build",
+    "preversion": "npm run lint && npm run test",
+    "prepublishOnly": "npm run purge && npm run build",
     "file": "ts-node --"
   },
   "keywords": [],
