@@ -15,28 +15,12 @@ export const ErrInvalidTTL = 'ttl must be an integer greater than zero'
 /** Error message which is thrown when Counter constructor receives invalid value of limit. */
 export const ErrInvalidLimit = 'limit must be an integer greater than zero'
 
-/** Error message which is thrown when count failed. */
-export const ErrTooManyRequests = 'Too Many Requests'
-
-/** Error which is thrown when count failed. */
-export class CounterError extends Error {
-  private _ttl: number
-  constructor(ttl: number) {
-    super(ErrTooManyRequests)
-    this._ttl = ttl
-  }
-  /** TTL of a key in milliseconds. */
-  get ttl() {
-    return this._ttl
-  }
-}
-
 /** Parameters for creating new Counter. */
 export interface Params {
   /** TTL of a key in milliseconds. Must be greater than 0. */
   ttl: number
-  /** Maximum key value. Must be greater than 0. By default equals 1. */
-  limit?: number
+  /** Maximum key value. Must be greater than 0. */
+  limit: number
   /** Prefix of a key. By default empty string. */
   prefix?: string
 }
@@ -47,7 +31,7 @@ export class Counter {
   private _ttl: number
   private _limit: number
   private _prefix: string
-  constructor(gateway: Gateway, { ttl, limit = 1, prefix = '' }: Params) {
+  constructor(gateway: Gateway, { ttl, limit, prefix = '' }: Params) {
     if (!(Number.isSafeInteger(ttl) && ttl > 0)) {
       throw new Error(ErrInvalidTTL)
     }
@@ -59,11 +43,27 @@ export class Counter {
     this._limit = limit
     this._prefix = prefix
   }
-  /** Increments key value. Throws CounterError. */
+  /** Increments key value. Throws TTLError if limit exceeded. */
   public async count(key: string): Promise<void> {
     const v = await this._gateway.incr(this._prefix + key, this._limit, this._ttl)
     if (v !== -1) {
-      throw new CounterError(v)
+      throw new TTLError(v)
     }
+  }
+}
+
+/** Error message which is thrown when Counter failed to count. */
+export const ErrTooManyRequests = 'Too Many Requests'
+
+/** Error which is thrown when Counter failed to count. */
+export class TTLError extends Error {
+  private _ttl: number
+  constructor(ttl: number) {
+    super(ErrTooManyRequests)
+    this._ttl = ttl
+  }
+  /** TTL of a key in milliseconds. */
+  get ttl() {
+    return this._ttl
   }
 }

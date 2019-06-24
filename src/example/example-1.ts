@@ -1,5 +1,5 @@
 import { createClient } from 'redis'
-import Counter from '..'
+import { createCounter, Counter, TTLError } from '..'
 
 // Decorator to log output of Counter methods call
 class MyCounter {
@@ -16,7 +16,7 @@ class MyCounter {
       await this._counter.count(this._key)
       console.log(`Counter#${this._id} has counted the key`)
     } catch (err) {
-      if (err instanceof Counter.Error) {
+      if (err instanceof TTLError) {
         console.log(`Counter#${this._id} has reached the limit, retry after ${err.ttl} ms`)
       } else {
         throw err
@@ -27,12 +27,10 @@ class MyCounter {
 
 (async function main() {
   const client = createClient()
-  const limit = 2
-  const ttl = 100
-  const params = { ttl, limit }
+  const params = { ttl: 2, limit: 100 }
   const key = 'key'
-  const counter1 = new MyCounter(Counter(client, params), key, 1)
-  const counter2 = new MyCounter(Counter(client, params), key, 2)
+  const counter1 = new MyCounter(createCounter(client, params), key, 1)
+  const counter2 = new MyCounter(createCounter(client, params), key, 2)
 
   await counter1.count() // Counter#1 has counted the key
   await counter2.count() // Counter#2 has counted the key
