@@ -1,12 +1,11 @@
 import { createClient, RedisClient } from 'redis'
-import { Gateway } from './redis'
+import { Gateway, ErrKeyNameClash } from './redis'
 
 const redisUrl = 'redis://127.0.0.1:6379/10'
 let client: RedisClient
 
 const key = 'key'
-const limit = 2
-const ttl = 500
+const ttl = 100
 let gateway: Gateway
 
 beforeAll(async () => {
@@ -18,7 +17,7 @@ afterAll(() => {
   client.quit()
 })
 
-describe('Gateway', () => {
+describe('Redis Gateway', () => {
   beforeEach(() => {
     gateway = new Gateway(client)
   })
@@ -27,40 +26,47 @@ describe('Gateway', () => {
     await delKey()
   })
 
-  it('should set key value and ttl of key if key not exists or increment key value if key exists', async () => {
-    const t1 = await gateway.incr(key, limit, ttl)
-    expect(t1).toBe(-1)
-    const r1 = await getKey()
-    expect(r1.v).toBe('1')
-    expect(r1.ttl).toBeGreaterThan(0)
-    expect(r1.ttl).toBeLessThanOrEqual(ttl)
+  it('should set key value and TTL of key if key not exists', async () => {
+    const res = await gateway.incr(key, ttl)
+    expect(res.value).toBe(1)
+    expect(res.ttl).toBe(ttl)
 
-    const t2 = await gateway.incr(key, limit, ttl)
-    expect(t2).toBe(-1)
-    const r2 = await getKey()
-    expect(r2.v).toBe('2')
-    expect(r2.ttl).toBeGreaterThan(0)
-    expect(r2.ttl).toBeLessThanOrEqual(ttl)
-
-    const t3 = await gateway.incr(key, limit, ttl)
-    expect(t3).toBeGreaterThan(0)
-    expect(t3).toBeLessThanOrEqual(ttl)
-    const r3 = await getKey()
-    expect(r3.v).toBe('3')
-    expect(r3.ttl).toBeGreaterThan(0)
-    expect(r3.ttl).toBeLessThanOrEqual(ttl)
+    let k = await getKey()
+    expect(k.value).toBe('1')
+    expect(k.ttl).toBeGreaterThan(0)
+    expect(k.ttl).toBeLessThanOrEqual(ttl)
 
     await sleep(ttl)
-    const r = await getKey()
-    expect(r.v).toBe(null)
-    expect(r.ttl).toBe(-2)
 
-    const t4 = await gateway.incr(key, limit, ttl)
-    expect(t4).toBe(-1)
-    const r4 = await getKey()
-    expect(r4.v).toBe('1')
-    expect(r4.ttl).toBeGreaterThan(0)
-    expect(r4.ttl).toBeLessThanOrEqual(ttl)
+    k = await getKey()
+    expect(k.value).toBe(null)
+    expect(k.ttl).toBe(-2)
+  })
+
+  it('should increment key value if key exists', async () => {
+    await gateway.incr(key, ttl)
+
+    const res = await gateway.incr(key, ttl)
+    expect(res.value).toBe(2)
+    expect(res.ttl).toBeGreaterThan(0)
+    expect(res.ttl).toBeLessThanOrEqual(ttl)
+
+    let k = await getKey()
+    expect(k.value).toBe('2')
+    expect(k.ttl).toBeGreaterThan(0)
+    expect(k.ttl).toBeLessThanOrEqual(ttl)
+
+    await sleep(ttl)
+
+    k = await getKey()
+    expect(k.value).toBe(null)
+    expect(k.ttl).toBe(-2)
+  })
+
+  it('should throw Error if key exists and has no TTL', async () => {
+    await setKey('1')
+
+    expect(gateway.incr(key, ttl)).rejects.toThrow(new Error(ErrKeyNameClash))
   })
 })
 
@@ -75,16 +81,27 @@ function delKey(): Promise<void> {
   })
 }
 
-function getKey(): Promise<{ v: string; ttl: number; }> {
+function getKey(): Promise<{ value: string; ttl: number; }> {
   return new Promise((resolve, reject) => {
     client.multi().get(key).pttl(key).exec((err, res) => {
       if (err) {
         return reject(err)
       }
       resolve({
-        v: res[0],
+        value: res[0],
         ttl: res[1],
       })
+    })
+  })
+}
+
+function setKey(value: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    client.set(key, value, (err) => {
+      if (err) {
+        return reject(err)
+      }
+      resolve()
     })
   })
 }

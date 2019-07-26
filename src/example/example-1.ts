@@ -1,45 +1,33 @@
 import { createClient } from 'redis'
 import { createCounter, Counter, TTLError } from '..'
 
-// Decorator to log output of Counter methods call
-class MyCounter {
-  private _counter: Counter
-  private _key: string
-  private _id: number
-  constructor(counter: Counter, key: string, id: number) {
-    this._counter = counter
-    this._key = key
-    this._id = id
-  }
-  public async count(): Promise<void> {
+(async function main() {
+  const client = createClient()
+  const params = { ttl: 100, limit: 2 }
+  const key = 'key'
+  const count = async (counter: Counter, id: number) => {
     try {
-      await this._counter.count(this._key)
-      console.log(`Counter#${this._id} has counted the key`)
+      const remainder = await counter.count(key)
+      console.log('Counter#%d has counted the key, remainder %d', id, remainder)
     } catch (err) {
       if (err instanceof TTLError) {
-        console.log(`Counter#${this._id} has reached the limit, retry after ${err.ttl} ms`)
+        console.log('Counter#%d has reached the limit, retry after %d ms', id, err.ttl)
       } else {
         throw err
       }
     }
   }
-}
+  const counter1 = createCounter(client, params)
+  const counter2 = createCounter(client, params)
 
-(async function main() {
-  const client = createClient()
-  const params = { ttl: 2, limit: 100 }
-  const key = 'key'
-  const counter1 = new MyCounter(createCounter(client, params), key, 1)
-  const counter2 = new MyCounter(createCounter(client, params), key, 2)
-
-  await counter1.count() // Counter#1 has counted the key
-  await counter2.count() // Counter#2 has counted the key
-  await counter1.count() // Counter#1 has reached the limit, retry after 97 ms
-  await counter2.count() // Counter#2 has reached the limit, retry after 96 ms
+  await count(counter1, 1) // Counter#1 has counted the key, remainder 1
+  await count(counter2, 2) // Counter#2 has counted the key, remainder 0
+  await count(counter1, 1) // Counter#1 has reached the limit, retry after 97 ms
+  await count(counter2, 2) // Counter#2 has reached the limit, retry after 96 ms
   await sleep(200)
   console.log('Timeout 200 ms is up')
-  await counter1.count() // Counter#1 has counted the key
-  await counter2.count() // Counter#2 has counted the key
+  await count(counter1, 1) // Counter#1 has counted the key, remainder 1
+  await count(counter2, 2) // Counter#2 has counted the key, remainder 0
 
   client.quit()
 })()

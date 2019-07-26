@@ -1,15 +1,20 @@
 /** Gateway to storage to store a counter value. */
 export interface Gateway {
   /**
-   * Sets key value and ttl of key if key not exists.
+   * Sets key value and TTL of key if key not exists.
    * Increments key value if key exists.
-   * Returns -1 if key value less than or equal limit.
-   * Returns ttl in milliseconds if key value greater than limit.
    */
-  incr(key: string, limit: number, ttl: number): Promise<number>
+  incr(key: string, ttl: number): Promise<IncrResponse>
 }
 
-/** Error message which is thrown when Counter constructor receives invalid value of ttl. */
+export interface IncrResponse {
+  /** Key value after increment. */
+  value: number
+  /** TTL of a key in milliseconds. */
+  ttl: number
+}
+
+/** Error message which is thrown when Counter constructor receives invalid value of TTL. */
 export const ErrInvalidTTL = 'ttl must be an integer greater than zero'
 
 /** Error message which is thrown when Counter constructor receives invalid value of limit. */
@@ -43,12 +48,14 @@ export class Counter {
     this._limit = limit
     this._prefix = prefix
   }
-  /** Increments key value. Throws TTLError if limit exceeded. */
-  public async count(key: string): Promise<void> {
-    const v = await this._gateway.incr(this._prefix + key, this._limit, this._ttl)
-    if (v !== -1) {
-      throw new TTLError(v)
+  /** Increments key value. Returns limit remainder. Throws TTLError if limit exceeded. */
+  async count(key: string): Promise<number> {
+    const res = await this._gateway.incr(this._prefix + key, this._ttl)
+    const rem = this._limit - res.value
+    if (rem < 0) {
+      throw new TTLError(res.ttl)
     }
+    return rem
   }
 }
 

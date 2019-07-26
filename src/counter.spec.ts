@@ -1,5 +1,6 @@
 import {
   Gateway,
+  IncrResponse,
   Counter,
   ErrInvalidTTL,
   ErrInvalidLimit,
@@ -11,10 +12,11 @@ const gateway = {} as jest.Mocked<Gateway>
 
 describe('Counter', () => {
   const key = 'key'
+  const limit = 1
   let counter: Counter
 
   beforeEach(() => {
-    counter = new Counter(gateway, { ttl: 1, limit: 1 })
+    counter = new Counter(gateway, { ttl: 100, limit })
   })
 
   describe('count', () => {
@@ -25,17 +27,18 @@ describe('Counter', () => {
       await expect(counter.count(key)).rejects.toThrow(err)
     })
 
-    it('should throw TTLError if gateway#incr fails', async () => {
-      const ttl = 42
-      gateway.incr = jest.fn().mockResolvedValue(ttl)
+    it('should throw TTLError if gateway#incr returns value greater than limit', async () => {
+      const res: IncrResponse = { value: limit + 1, ttl: 42 }
+      gateway.incr = jest.fn().mockResolvedValue(res)
 
-      await expect(counter.count(key)).rejects.toThrow(new TTLError(ttl))
+      await expect(counter.count(key)).rejects.toThrow(new TTLError(res.ttl))
     })
 
-    it('should not throw Error if gateway#incr does not fail', async () => {
-      gateway.incr = jest.fn().mockResolvedValue(-1)
+    it('should return limit remainder if gateway#incr returns value less than or equals limit', async () => {
+      const res: IncrResponse = { value: limit, ttl: 42 }
+      gateway.incr = jest.fn().mockResolvedValue(res)
 
-      await expect(counter.count(key)).resolves.toBeUndefined()
+      await expect(counter.count(key)).resolves.toBe(0)
     })
   })
 })

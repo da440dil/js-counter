@@ -8,35 +8,39 @@ export const ErrKeyNameClash = 'Key name clash'
 
 const INCR = '' +
   'local v = redis.call("incr", KEYS[1]) ' +
-  'if v > tonumber(ARGV[1]) then ' +
-  'return redis.call("pttl", KEYS[1]) ' +
-  'end ' +
   'if v == 1 then ' +
-  'redis.call("pexpire", KEYS[1], ARGV[2]) ' +
+  'redis.call("pexpire", KEYS[1], ARGV[1]) ' +
+  'return {v, -2} ' +
   'end ' +
-  'return nil'
+  'local t = redis.call("pttl", KEYS[1]) ' +
+  'return {v, t}'
 
 export class Gateway {
   private _client: RedisClient
   constructor(client: RedisClient) {
     this._client = client
   }
-  public incr(key: string, limit: number, ttl: number): Promise<number> {
+  incr(key: string, ttl: number): Promise<{ value: number; ttl: number; }> {
     return new Promise((resolve, reject) => {
-      this._client.eval(INCR, 1, key, limit, ttl, (err, res) => {
+      this._client.eval(INCR, 1, key, ttl, (err, res) => {
         if (err) {
           return reject(err)
         }
-        if (res == null) {
-          return resolve(-1)
-        }
-        if (Number(res) !== res) {
+        const v = parseInt(res[0], 10)
+        if (isNaN(v)) {
           return reject(new Error(ErrInvalidResponse))
         }
-        if (res === -1) {
+        const t = parseInt(res[1], 10)
+        if (isNaN(t)) {
+          return reject(new Error(ErrInvalidResponse))
+        }
+        if (t === -1) {
           return reject(new Error(ErrKeyNameClash))
         }
-        resolve(res)
+        if (t === -2) {
+          return resolve({ value: v, ttl })
+        }
+        resolve({ value: v, ttl: t })
       })
     })
   }
