@@ -4,10 +4,10 @@ export interface Gateway {
    * Sets key value and TTL of key if key not exists.
    * Increments key value if key exists.
    */
-  incr(key: string, ttl: number): Promise<IncrResponse>
+  incr(key: string, ttl: number): Promise<ValueTTL>
 }
 
-export interface IncrResponse {
+export interface ValueTTL {
   /** Key value after increment. */
   value: number
   /** TTL of a key in milliseconds. */

@@ -1,6 +1,6 @@
 import {
   Gateway,
-  IncrResponse,
+  ValueTTL,
   Counter,
   ErrInvalidTTL,
   ErrInvalidLimit,
@@ -28,14 +28,14 @@ describe('Counter', () => {
     })
 
     it('should throw TTLError if gateway#incr returns value greater than limit', async () => {
-      const res: IncrResponse = { value: limit + 1, ttl: 42 }
+      const res: ValueTTL = { value: limit + 1, ttl: 42 }
       gateway.incr = jest.fn().mockResolvedValue(res)
 
       await expect(counter.count(key)).rejects.toThrow(new TTLError(res.ttl))
     })
 
     it('should return limit remainder if gateway#incr returns value less than or equals limit', async () => {
-      const res: IncrResponse = { value: limit, ttl: 42 }
+      const res: ValueTTL = { value: limit, ttl: 42 }
       gateway.incr = jest.fn().mockResolvedValue(res)
 
       await expect(counter.count(key)).resolves.toBe(0)
