@@ -4,6 +4,8 @@ import { createCounter, Counter, TTLError } from '..'
 (async function main() {
   const client = createClient()
   const params = { ttl: 100, limit: 2 }
+  const counter1 = createCounter(client, params)
+  const counter2 = createCounter(client, params)
   const key = 'key'
   const count = async (counter: Counter, id: number) => {
     try {
@@ -17,17 +19,20 @@ import { createCounter, Counter, TTLError } from '..'
       }
     }
   }
-  const counter1 = createCounter(client, params)
-  const counter2 = createCounter(client, params)
 
-  await count(counter1, 1) // Counter#1 has counted the key, remainder 1
-  await count(counter2, 2) // Counter#2 has counted the key, remainder 0
-  await count(counter1, 1) // Counter#1 has reached the limit, retry after 97 ms
-  await count(counter2, 2) // Counter#2 has reached the limit, retry after 96 ms
+  await Promise.all([count(counter1, 1), count(counter2, 2)])
+  await Promise.all([count(counter1, 1), count(counter2, 2)])
   await sleep(200)
   console.log('Timeout 200 ms is up')
-  await count(counter1, 1) // Counter#1 has counted the key, remainder 1
-  await count(counter2, 2) // Counter#2 has counted the key, remainder 0
+  await Promise.all([count(counter1, 1), count(counter2, 2)])
+  // Output:
+  // Counter#1 has counted the key, remainder 1
+  // Counter#2 has counted the key, remainder 0
+  // Counter#1 has reached the limit, retry after 97 ms
+  // Counter#2 has reached the limit, retry after 97 ms
+  // Timeout 200 ms is up
+  // Counter#1 has counted the key, remainder 1
+  // Counter#2 has counted the key, remainder 0
 
   client.quit()
 })()

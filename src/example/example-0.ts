@@ -18,9 +18,11 @@ import { createCounter, TTLError } from '..'
     }
   }
 
-  await count() // Counter has counted the key, remainder 1
-  await count() // Counter has counted the key, remainder 0
-  await count() // Counter has reached the limit, retry after 97 ms
+  await Promise.all([count(), count(), count()])
+  // Output:
+  // Counter has counted the key, remainder 1
+  // Counter has counted the key, remainder 0
+  // Counter has reached the limit, retry after 100 ms
 
   client.quit()
 })()
