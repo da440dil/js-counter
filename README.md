@@ -1,5 +1,7 @@
 # js-counter
 
+[![Build Status](https://travis-ci.com/da440dil/js-counter.svg?branch=master)](https://travis-ci.com/da440dil/js-counter)
+
 Distributed rate limiting using [Redis](https://redis.io/).
 
 ## Example
