@@ -15,7 +15,14 @@
     "prepublishOnly": "npm run clean lib && npm run build",
     "file": "ts-node --"
   },
-  "keywords": [],
+  "keywords": [
+    "distributed",
+    "rate",
+    "rate-limit",
+    "rate-limiter",
+    "rate-limiting",
+    "redis"
+  ],
   "author": "",
   "license": "ISC",
   "private": false,
