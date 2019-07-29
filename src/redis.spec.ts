@@ -1,5 +1,5 @@
-import { createClient, RedisClient } from 'redis'
-import { Gateway, ErrKeyNameClash } from './redis'
+import { createClient, RedisClient, Callback } from 'redis'
+import { Gateway, ErrInvalidResponse, ErrKeyNameClash } from './redis'
 
 const redisUrl = 'redis://localhost:6379/10'
 let client: RedisClient
@@ -68,6 +68,29 @@ describe('Redis Gateway', () => {
 
     expect(gateway.incr(key, ttl)).rejects.toThrow(new Error(ErrKeyNameClash))
   })
+
+  it('should throw Error if redis throws Error', async () => {
+    const evalMock = jest.spyOn(client, 'eval')
+    const err = new Error('any')
+    evalMock.mockImplementation(makeEvalFn(err, []))
+
+    expect(gateway.incr(key, ttl)).rejects.toThrow(err)
+
+    evalMock.mockRestore()
+  })
+
+  it('should throw Error if redis returns response of invalid type', async () => {
+    const evalMock = jest.spyOn(client, 'eval')
+    const err = new Error(ErrInvalidResponse)
+
+    evalMock.mockImplementation(makeEvalFn(null, ['', 42]))
+    expect(gateway.incr(key, ttl)).rejects.toThrow(err)
+
+    evalMock.mockImplementation(makeEvalFn(null, [42, '']))
+    expect(gateway.incr(key, ttl)).rejects.toThrow(err)
+
+    evalMock.mockRestore()
+  })
 })
 
 function delKey(): Promise<void> {
@@ -110,4 +133,14 @@ function sleep(time: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, time)
   })
+}
+
+function makeEvalFn(err: Error | null, res: Array<string | number>) {
+  return (...args: Array<string | number | Callback<Array<string | number>>>): boolean => {
+    const cb = args[args.length - 1]
+    if (typeof cb === 'function') {
+      cb(err, res)
+    }
+    return false
+  }
 }
