@@ -66,7 +66,7 @@ describe('Redis Gateway', () => {
   it('should throw Error if key exists and has no TTL', async () => {
     await setKey('1')
 
-    expect(gateway.incr(key, ttl)).rejects.toThrow(new Error(ErrKeyNameClash))
+    await expect(gateway.incr(key, ttl)).rejects.toThrow(new Error(ErrKeyNameClash))
   })
 
   it('should throw Error if redis throws Error', async () => {
@@ -74,7 +74,7 @@ describe('Redis Gateway', () => {
     const err = new Error('any')
     evalMock.mockImplementation(makeEvalFn(err, []))
 
-    expect(gateway.incr(key, ttl)).rejects.toThrow(err)
+    await expect(gateway.incr(key, ttl)).rejects.toThrow(err)
 
     evalMock.mockRestore()
   })
@@ -84,10 +84,10 @@ describe('Redis Gateway', () => {
     const err = new Error(ErrInvalidResponse)
 
     evalMock.mockImplementation(makeEvalFn(null, ['', 42]))
-    expect(gateway.incr(key, ttl)).rejects.toThrow(err)
+    await expect(gateway.incr(key, ttl)).rejects.toThrow(err)
 
     evalMock.mockImplementation(makeEvalFn(null, [42, '']))
-    expect(gateway.incr(key, ttl)).rejects.toThrow(err)
+    await expect(gateway.incr(key, ttl)).rejects.toThrow(err)
 
     evalMock.mockRestore()
   })
