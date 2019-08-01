@@ -1,6 +1,6 @@
 {
   "name": "@da440dil/js-counter",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Distributed rate limiting using Redis",
   "main": "lib/index.js",
   "scripts": {
