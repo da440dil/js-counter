@@ -20,6 +20,9 @@ export const ErrInvalidTTL = 'ttl must be an integer greater than zero'
 /** Error message which is thrown when Counter constructor receives invalid value of limit. */
 export const ErrInvalidLimit = 'limit must be an integer greater than zero'
 
+/** Error message which is thrown when when key size is greater than 512 MB. */
+export const ErrInvalidKey = 'key size must be less than or equal to 512 MB'
+
 /** Parameters for creating new Counter. */
 export interface Params {
   /** TTL of a key in milliseconds. Must be greater than 0. */
@@ -43,6 +46,9 @@ export class Counter {
     if (!(Number.isSafeInteger(limit) && limit > 0)) {
       throw new Error(ErrInvalidLimit)
     }
+    if (!isValidKey(prefix)) {
+      throw new Error(ErrInvalidKey)
+    }
     this._gateway = gateway
     this._ttl = ttl
     this._limit = limit
@@ -50,7 +56,11 @@ export class Counter {
   }
   /** Increments key value. Returns limit remainder. Throws TTLError if limit exceeded. */
   async count(key: string): Promise<number> {
-    const res = await this._gateway.incr(this._prefix + key, this._ttl)
+    key = this._prefix + key
+    if (!isValidKey(key)) {
+      throw new Error(ErrInvalidKey)
+    }
+    const res = await this._gateway.incr(key, this._ttl)
     const rem = this._limit - res.value
     if (rem < 0) {
       throw new TTLError(res.ttl)
@@ -73,4 +83,10 @@ export class TTLError extends Error {
   get ttl() {
     return this._ttl
   }
+}
+
+export const MaxKeySize = 512000000
+
+function isValidKey(key: string): boolean {
+  return Buffer.byteLength(key, 'utf8') <= MaxKeySize
 }

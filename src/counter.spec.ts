@@ -5,10 +5,14 @@ import {
   ErrInvalidTTL,
   ErrInvalidLimit,
   ErrTooManyRequests,
+  ErrInvalidKey,
   TTLError,
+  MaxKeySize,
 } from './counter'
 
 const gateway = {} as jest.Mocked<Gateway>
+
+const invalidKey = Buffer.alloc(MaxKeySize + 1).toString()
 
 describe('Counter', () => {
   const key = 'key'
@@ -34,6 +38,10 @@ describe('Counter', () => {
       await expect(counter.count(key)).rejects.toThrow(new TTLError(res.ttl))
     })
 
+    it('should throw Error if got invalid key', async () => {
+      await expect(counter.count(invalidKey)).rejects.toThrow(new Error(ErrInvalidKey))
+    })
+
     it('should return limit remainder if gateway#incr returns value less than or equals limit', async () => {
       const res: ValueTTL = { value: limit, ttl: 42 }
       gateway.incr = jest.fn().mockResolvedValue(res)
@@ -50,6 +58,10 @@ describe('Counter constructor', () => {
 
   it('should throw Error if got invalid limit parameter', () => {
     expect(() => new Counter(gateway, { ttl: 1, limit: 0 })).toThrow(new Error(ErrInvalidLimit))
+  })
+
+  it('should throw Error if got invalid prefix parameter', () => {
+    expect(() => new Counter(gateway, { ttl: 1, limit: 1, prefix: invalidKey })).toThrow(new Error(ErrInvalidKey))
   })
 })
 
