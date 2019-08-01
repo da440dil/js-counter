@@ -85,6 +85,7 @@ export class TTLError extends Error {
   }
 }
 
+/** Maximum key size in bytes. */
 export const MaxKeySize = 512000000
 
 function isValidKey(key: string): boolean {
