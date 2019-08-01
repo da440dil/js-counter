@@ -25,7 +25,7 @@
     "redis"
   ],
   "author": "Anatoly Demidovich",
-  "license": "ISC",
+  "license": "MIT",
   "private": false,
   "engines": {
     "node": ">=8.0"
