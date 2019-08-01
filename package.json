@@ -24,7 +24,7 @@
     "rate-limiting",
     "redis"
   ],
-  "author": "",
+  "author": "Anatoly Demidovich",
   "license": "ISC",
   "private": false,
   "engines": {
