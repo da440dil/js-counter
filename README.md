@@ -14,8 +14,8 @@ const c = new Counter({ limit: 1, ttl: 100 })
 try {
   const v = await c.count('key')
   // Counter value equals 1
-	// Remainder value (v) equals 0
-	// Next counter.count('key') call will return TTLError
+  // Remainder value (v) equals 0
+  // Next counter.count('key') call will return TTLError
 } catch (err) {
   if (err instanceof TTLError) {
     // Use err.TTL() if need
