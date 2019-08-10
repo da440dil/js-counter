@@ -1,9 +1,10 @@
 import { createClient } from 'redis'
-import { createCounter, TTLError } from '..'
+import { RedisGateway, Counter, TTLError } from '..'
 
 (async function main() {
   const client = createClient()
-  const counter = createCounter(client, { ttl: 100, limit: 2 })
+  const gateway = new RedisGateway(client)
+  const counter = new Counter({ gateway, ttl: 100, limit: 2 })
   const key = 'key'
   const count = async () => {
     try {

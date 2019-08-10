@@ -1,3 +1,5 @@
+import { Gateway as MemoryGateway } from './gateway/memory/gateway'
+
 /** Gateway to storage to store a counter value. */
 export interface Gateway {
   /**
@@ -29,6 +31,12 @@ export interface Params {
   ttl: number
   /** Maximum key value. Must be greater than 0. */
   limit: number
+  /**
+   * Gateway to storage to store a counter value.
+   * If gateway not defined counter creates new memory gateway
+   * with expired keys cleanup every 100 milliseconds.
+   */
+  gateway?: Gateway
   /** Prefix of a key. By default empty string. */
   prefix?: string
 }
@@ -39,12 +47,12 @@ export class Counter {
   private _ttl: number
   private _limit: number
   private _prefix: string
-  constructor(gateway: Gateway, { ttl, limit, prefix = '' }: Params) {
-    if (!(Number.isSafeInteger(ttl) && ttl > 0)) {
-      throw new Error(ErrInvalidTTL)
-    }
+  constructor({ ttl, limit, prefix = '', gateway = new MemoryGateway(100) }: Params) {
     if (!(Number.isSafeInteger(limit) && limit > 0)) {
       throw new Error(ErrInvalidLimit)
+    }
+    if (!(Number.isSafeInteger(ttl) && ttl > 0)) {
+      throw new Error(ErrInvalidTTL)
     }
     if (!isValidKey(prefix)) {
       throw new Error(ErrInvalidKey)

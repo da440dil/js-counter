@@ -1,11 +1,12 @@
 import { createClient } from 'redis'
-import { createCounter, Counter, TTLError } from '..'
+import { RedisGateway, Counter, TTLError } from '..'
 
 (async function main() {
   const client = createClient()
-  const params = { ttl: 100, limit: 2 }
-  const counter1 = createCounter(client, params)
-  const counter2 = createCounter(client, params)
+  const gateway = new RedisGateway(client)
+  const params = { gateway, ttl: 100, limit: 2 }
+  const counter1 = new Counter(params)
+  const counter2 = new Counter(params)
   const key = 'key'
   const count = async (counter: Counter, id: number) => {
     try {
@@ -28,8 +29,8 @@ import { createCounter, Counter, TTLError } from '..'
   // Output:
   // Counter#1 has counted the key, remainder 1
   // Counter#2 has counted the key, remainder 0
-  // Counter#1 has reached the limit, retry after 97 ms
-  // Counter#2 has reached the limit, retry after 97 ms
+  // Counter#1 has reached the limit, retry after 98 ms
+  // Counter#2 has reached the limit, retry after 98 ms
   // Timeout 200 ms is up
   // Counter#1 has counted the key, remainder 1
   // Counter#2 has counted the key, remainder 0

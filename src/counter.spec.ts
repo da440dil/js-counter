@@ -20,7 +20,7 @@ describe('Counter', () => {
   let counter: Counter
 
   beforeEach(() => {
-    counter = new Counter(gateway, { ttl: 100, limit })
+    counter = new Counter({ gateway, limit, ttl: 100 })
   })
 
   describe('count', () => {
@@ -52,16 +52,16 @@ describe('Counter', () => {
 })
 
 describe('Counter constructor', () => {
-  it('should throw Error if got invalid ttl parameter', () => {
-    expect(() => new Counter(gateway, { ttl: 0, limit: 0 })).toThrow(new Error(ErrInvalidTTL))
+  it('should throw Error if got invalid limit parameter', () => {
+    expect(() => new Counter({ limit: 0, ttl: 0 })).toThrow(new Error(ErrInvalidLimit))
   })
 
-  it('should throw Error if got invalid limit parameter', () => {
-    expect(() => new Counter(gateway, { ttl: 1, limit: 0 })).toThrow(new Error(ErrInvalidLimit))
+  it('should throw Error if got invalid ttl parameter', () => {
+    expect(() => new Counter({ limit: 1, ttl: 0 })).toThrow(new Error(ErrInvalidTTL))
   })
 
   it('should throw Error if got invalid prefix parameter', () => {
-    expect(() => new Counter(gateway, { ttl: 1, limit: 1, prefix: invalidKey })).toThrow(new Error(ErrInvalidKey))
+    expect(() => new Counter({ limit: 1, ttl: 1, prefix: invalidKey })).toThrow(new Error(ErrInvalidKey))
   })
 })
 
