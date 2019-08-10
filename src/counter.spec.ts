@@ -1,6 +1,5 @@
+import { Gateway, ValueTTL } from './gateway'
 import {
-  Gateway,
-  ValueTTL,
   Counter,
   ErrInvalidTTL,
   ErrInvalidLimit,

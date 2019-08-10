@@ -1,11 +1,7 @@
+import { Gateway as IGateway, ValueTTL } from '../../gateway'
 import { Storage } from './storage'
 
-export interface ValueTTL {
-  value: number
-  ttl: number
-}
-
-export class Gateway {
+export class Gateway implements IGateway {
   private _storage: Storage
   private _timer: NodeJS.Timer
   constructor(cleanupInterval: number) {

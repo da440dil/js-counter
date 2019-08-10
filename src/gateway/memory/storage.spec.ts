@@ -22,6 +22,7 @@ describe('Memory Storage', () => {
 
   it('should set key value and TTL of key if key exists and key is expired', async () => {
     await storage.incr(key, -ttl)
+    expect(storage.get(key)).toStrictEqual({ value: 0, ttl: -2 })
 
     const res = await storage.incr(key, ttl)
     expect(res.value).toBe(1)

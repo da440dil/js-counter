@@ -1,3 +1,4 @@
+import { Gateway as IGateway, ValueTTL } from '../../gateway'
 import { RedisClient } from 'redis'
 
 /** Error message which is thrown when Redis command returns response of invalid type. */
@@ -15,12 +16,7 @@ const INCR = '' +
   'local t = redis.call("pttl", KEYS[1]) ' +
   'return {v, t}'
 
-export interface ValueTTL {
-  value: number
-  ttl: number
-}
-
-export class Gateway {
+export class Gateway implements IGateway {
   private _client: RedisClient
   constructor(client: RedisClient) {
     this._client = client

@@ -1,11 +1,8 @@
+import { ValueTTL } from '../../gateway'
+
 interface Item {
   value: number
   expiresAt: number
-}
-
-export interface ValueTTL {
-  value: number
-  ttl: number
 }
 
 export class Storage {
