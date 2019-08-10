@@ -30,4 +30,4 @@ try {
 - [example](./src/examples/counter-gateway-default.ts) usage with default [gateway](./src/gateway/memory/gateway.ts)
 - [example](./src/examples/counter-gateway-memory.ts) usage with memory [gateway](./src/gateway/memory/gateway.ts)
 - [example](./src/examples/counter-gateway-redis.ts) usage with [Redis](https://redis.io/) [gateway](./src/gateway/redis/gateway.ts)
-- [example](./src/examples/counter-gateway-redis-2.ts) usage with [Redis](https://redis.io/) [gateway](./src/gateway/redis/gateway.ts) (with multiple counters)
+- [example](./src/examples/counter-gateway-redis-2.ts) usage with [Redis](https://redis.io/) [gateway](./src/gateway/redis/gateway.ts) (with alternating counters)
