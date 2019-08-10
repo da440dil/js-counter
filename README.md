@@ -9,12 +9,12 @@ Distributed rate limiting with pluggable storage for storing counters state.
 
 ```javascript
 // Create counter
-const c = new Counter({ limit: 1, ttl: 100 })
+const counter = new Counter({ limit: 1, ttl: 100 })
 // Increment counter and get remainder
 try {
-  const v = await c.count('key')
+  const remainder = await counter.count('key')
   // Counter value equals 1
-  // Remainder value (v) equals 0
+  // Remainder value equals 0
   // Next counter.count('key') call will return TTLError
 } catch (err) {
   if (err instanceof TTLError) {
