@@ -8,10 +8,10 @@ Distributed rate limiting with pluggable storage for storing counters state.
 ## Basic usage
 
 ```javascript
-// Create counter
+// Create new Counter
 const counter = new Counter({ limit: 1, ttl: 100 })
-// Increment counter and get remainder
 try {
+  // Increment counter and get remainder
   const remainder = await counter.count('key')
   // Counter value equals 1
   // Remainder value equals 0
