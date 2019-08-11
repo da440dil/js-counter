@@ -16,6 +16,7 @@ const INCR = '' +
   'local t = redis.call("pttl", KEYS[1]) ' +
   'return {v, t}'
 
+/** Implements gateway to Redis storage. */
 export class Gateway implements IGateway {
   private _client: RedisClient
   constructor(client: RedisClient) {

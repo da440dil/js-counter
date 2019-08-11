@@ -1,6 +1,7 @@
 import { Gateway as IGateway, ValueTTL } from '../../gateway'
 import { Storage } from './storage'
 
+/** Implements gateway to memory storage. */
 export class Gateway implements IGateway {
   private _storage: Storage
   private _timer: NodeJS.Timer
