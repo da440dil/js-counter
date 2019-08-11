@@ -7,7 +7,7 @@ export const ErrInvalidTTL = 'ttl must be an integer greater than 0'
 /** Error message which is thrown when Counter constructor receives invalid value of limit. */
 export const ErrInvalidLimit = 'limit must be an integer greater than 0'
 
-/** Error message which is thrown when when key size is greater than 512 MB. */
+/** Error message which is thrown when key size is greater than 512 MB. */
 export const ErrInvalidKey = 'key size must be less than or equal to 512 MB'
 
 /** Parameters for creating new Counter. */
