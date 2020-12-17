@@ -1,85 +1,96 @@
-import { IGateway } from './IGateway';
-import { MemoryGateway } from './gateway/MemoryGateway';
-import { TTLError } from './TTLError';
+import { createHash } from 'crypto';
+import { RedisClient } from 'redis';
+import { IWindowParam } from './IWindowParam';
 
-/** Counter implements distributed rate limiting. */
-export class Counter {
-  /** Error message which is thrown when Counter constructor receives invalid value of TTL. */
-  public static readonly ErrInvalidTTL = 'ttl must be an integer greater than 0';
-  /** Error message which is thrown when Counter constructor receives invalid value of limit. */
-  public static readonly ErrInvalidLimit = 'limit must be an integer greater than 0';
-  /** Error message which is thrown when key size is greater than 512 MB. */
-  public static readonly ErrInvalidKey = 'key size must be less than or equal to 512 MB';
-  /** Maximum key size in bytes. */
-  public static readonly MaxKeySize = 512000000;
+interface ICounterParam extends IWindowParam {
+    script: string;
+}
 
-  private static validateKey(key: string): void {
-    if (!isValidKey(key)) {
-      throw new Error(Counter.ErrInvalidKey);
-    }
-  }
-
-  private static validateLimit(limit: number): void {
-    if (!isPositiveInteger(limit)) {
-      throw new Error(Counter.ErrInvalidLimit);
-    }
-  }
-
-  private static validateTTL(ttl: number): void {
-    if (!isPositiveInteger(ttl)) {
-      throw new Error(Counter.ErrInvalidTTL);
-    }
-  }
-
-  private gateway: IGateway;
-  private ttl: number;
-  private limit: number;
-  private prefix: string;
-
-  constructor({ ttl, limit, gateway, prefix }: {
-    /** TTL of a key in milliseconds. Must be greater than 0. */
-    ttl: number;
-    /** Maximum key value. Must be greater than 0. */
-    limit: number;
+/** Result of count() operation. */
+export interface IResult {
+    /** Operation success flag. */
+    ok: boolean;
     /**
-     * Gateway to storage to store a counter value.
-     * If gateway not defined counter creates new memory gateway
-     * with expired keys cleanup every 100 milliseconds.
+     * Counter after increment.
+     * With fixed window algorithm in use counter is current window counter.
+     * With sliding window algorithm in use counter is sliding window counter.
      */
-    gateway?: IGateway;
-    /** Prefix of a key. By default empty string. */
-    prefix?: string;
-  }) {
-    Counter.validateLimit(limit);
-    Counter.validateTTL(ttl);
-    if (prefix === undefined) {
-      prefix = '';
-    } else {
-      Counter.validateKey(prefix);
-    }
-    this.gateway = gateway === undefined ? new MemoryGateway(100) : gateway;
-    this.ttl = ttl;
-    this.limit = limit;
-    this.prefix = prefix;
-  }
-
-  /** Increments key value. Returns limit remainder. Throws TTLError if limit exceeded. */
-  public async count(key: string): Promise<number> {
-    key = this.prefix + key;
-    Counter.validateKey(key);
-    const res = await this.gateway.incr(key, this.ttl);
-    const rem = this.limit - res.value;
-    if (rem < 0) {
-      throw new TTLError(res.ttl);
-    }
-    return rem;
-  }
+    counter: number;
+    /**
+     * TTL of the current window in milliseconds.
+     * Makes sense if operation failed, otherwise ttl is less than 0.
+     */
+    ttl: number;
 }
 
-function isValidKey(key: string): boolean {
-  return Buffer.byteLength(key, 'utf8') <= Counter.MaxKeySize;
+/** Implements distributed rate limiting. */
+export interface ICounter {
+    /** Increments key by value. */
+    count(key: string, value: number): Promise<IResult>;
 }
 
-function isPositiveInteger(v: number): boolean {
-  return Number.isSafeInteger(v) && v > 0;
+/** Error message which is thrown when Redis command returns response of invalid type. */
+export const errMsgInvalidResponse = 'Invalid redis response';
+
+export class Counter implements ICounter {
+    private client: RedisClient;
+    private size: number;
+    private limit: number;
+    private script: string;
+    private hash: string;
+
+    constructor({ client, size, limit, script }: ICounterParam) {
+        this.client = client;
+        this.size = size;
+        this.limit = limit;
+        this.script = script;
+        this.hash = createHash('sha1').update(script).digest('hex');
+    }
+
+    public async count(key: string, value: number): Promise<IResult> {
+        try {
+            return await this.evalsha(key, value);
+        } catch (err) {
+            if (!isNoScriptErr(err)) {
+                throw err;
+            }
+            await this.load(this.script);
+            return this.evalsha(key, value);
+        }
+    }
+
+    private evalsha(key: string, value: number): Promise<IResult> {
+        return new Promise((resolve, reject) => {
+            this.client.evalsha(this.hash, 1, key, value, this.size, this.limit, (err, res) => {
+                if (err) {
+                    return reject(err);
+                }
+                if (!Array.isArray(res)) {
+                    return reject(new Error(errMsgInvalidResponse));
+                }
+                if (typeof res[0] !== 'number') {
+                    return reject(new Error(errMsgInvalidResponse));
+                }
+                if (typeof res[1] !== 'number') {
+                    return reject(new Error(errMsgInvalidResponse));
+                }
+                resolve({ ok: res[1] === -1, counter: res[0], ttl: res[1] });
+            });
+        });
+    }
+
+    private load(script: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.client.script('load', script, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+    }
+}
+
+function isNoScriptErr(err: unknown): boolean {
+    return err instanceof Error && err.message.startsWith('NOSCRIPT ');
 }

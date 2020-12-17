@@ -1,67 +1,62 @@
-import { IGateway, IValueTTL } from './IGateway';
-import { Counter } from './Counter';
-import { TTLError } from './TTLError';
-import { MemoryGateway } from './gateway/MemoryGateway';
+import { createClient, RedisClient, Callback } from 'redis';
+import { Counter, errMsgInvalidResponse } from './Counter';
 
-const gateway = {} as jest.Mocked<IGateway>;
-
-const invalidKey = Buffer.alloc(Counter.MaxKeySize + 1).toString();
-
-describe('Counter', () => {
-  const key = 'key';
-  const limit = 1;
-  let counter: Counter;
-
-  beforeEach(() => {
-    counter = new Counter({ gateway, limit, ttl: 100 });
-  });
-
-  describe('count', () => {
-    it('should throw Error if gateway#incr throws Error', async () => {
-      const err = new Error('any');
-      gateway.incr = jest.fn().mockRejectedValue(err);
-
-      await expect(counter.count(key)).rejects.toThrow(err);
-    });
-
-    it('should throw TTLError if gateway#incr returns value greater than limit', async () => {
-      const res: IValueTTL = { value: limit + 1, ttl: 42 };
-      gateway.incr = jest.fn().mockResolvedValue(res);
-
-      await expect(counter.count(key)).rejects.toThrow(new TTLError(res.ttl));
-    });
-
-    it('should throw Error if got invalid key', async () => {
-      await expect(counter.count(invalidKey)).rejects.toThrow(new Error(Counter.ErrInvalidKey));
-    });
-
-    it('should return limit remainder if gateway#incr returns value less than or equals limit', async () => {
-      const res: IValueTTL = { value: limit, ttl: 42 };
-      gateway.incr = jest.fn().mockResolvedValue(res);
-
-      await expect(counter.count(key)).resolves.toBe(0);
-    });
-  });
+let client: RedisClient;
+beforeAll(() => {
+    client = createClient();
+});
+afterAll(() => {
+    client.quit();
 });
 
-describe('Counter constructor', () => {
-  it('should create Counter with gateway', () => {
-    expect(new Counter({ limit: 1, ttl: 1, gateway: new MemoryGateway(100) })).toBeInstanceOf(Counter);
-  });
+it('Counter', async () => {
+    const counter = new Counter({ client, size: 1000, limit: 100, script: '' });
 
-  it('should create Counter with default gateway', () => {
-    expect(new Counter({ limit: 1, ttl: 1 })).toBeInstanceOf(Counter);
-  });
+    const redisErr = new Error('Redis error');
+    const resErr = new Error(errMsgInvalidResponse);
 
-  it('should throw Error if got invalid limit parameter', () => {
-    expect(() => new Counter({ limit: 0, ttl: 1 })).toThrow(new Error(Counter.ErrInvalidLimit));
-  });
+    const evalMock = jest.spyOn(client, 'evalsha');
+    evalMock.mockImplementation(makeEvalFn(redisErr, []));
+    await expect(counter.count('', 1)).rejects.toThrow(redisErr);
 
-  it('should throw Error if got invalid ttl parameter', () => {
-    expect(() => new Counter({ limit: 1, ttl: 0 })).toThrow(new Error(Counter.ErrInvalidTTL));
-  });
+    evalMock.mockImplementation(makeEvalFn(null, undefined));
+    await expect(counter.count('', 1)).rejects.toThrow(resErr);
 
-  it('should throw Error if got invalid prefix parameter', () => {
-    expect(() => new Counter({ limit: 1, ttl: 1, prefix: invalidKey })).toThrow(new Error(Counter.ErrInvalidKey));
-  });
+    evalMock.mockImplementation(makeEvalFn(null, ['', -1]));
+    await expect(counter.count('', 1)).rejects.toThrow(resErr);
+
+    evalMock.mockImplementation(makeEvalFn(null, [1, '']));
+    await expect(counter.count('', 1)).rejects.toThrow(resErr);
+
+    evalMock.mockImplementation(makeEvalFn(null, [1, -1]));
+    await expect(counter.count('', 1)).resolves.toMatchObject({ ok: true, counter: 1, ttl: -1 });
+
+    evalMock.mockImplementation(makeEvalFn(null, [1, 0]));
+    await expect(counter.count('', 1)).resolves.toMatchObject({ ok: false, counter: 1, ttl: 0 });
+
+    const redisLoadErr = new Error('NOSCRIPT No matching script. Please use EVAL.');
+
+    const loadMock = jest.spyOn(client, 'script');
+    evalMock.mockImplementation(makeEvalFn(redisLoadErr, []));
+    loadMock.mockImplementation(makeEvalFn(redisErr, undefined));
+    await expect(counter.count('', 1)).rejects.toThrow(redisErr);
+
+    evalMock.mockImplementationOnce(makeEvalFn(redisLoadErr, [])).mockImplementationOnce(makeEvalFn(null, [1, -1]));
+    loadMock.mockImplementation(makeEvalFn(null, undefined));
+    await expect(counter.count('', 1)).resolves.toMatchObject({ ok: true, counter: 1, ttl: -1 });
+
+    loadMock.mockRestore();
+    evalMock.mockRestore();
 });
+
+type Res = (string | number)[] | string | undefined;
+
+function makeEvalFn(err: Error | null, res: Res) {
+    return (...args: (string | number | Callback<Res>)[]): boolean => {
+        const cb = args[args.length - 1];
+        if (typeof cb === 'function') {
+            cb(err, res);
+        }
+        return false;
+    };
+}

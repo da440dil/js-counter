@@ -3,31 +3,13 @@
 [![Build Status](https://travis-ci.com/da440dil/js-counter.svg?branch=master)](https://travis-ci.com/da440dil/js-counter)
 [![Coverage Status](https://coveralls.io/repos/github/da440dil/js-counter/badge.svg?branch=master)](https://coveralls.io/github/da440dil/js-counter?branch=master)
 
-Distributed rate limiting with pluggable storage for storing counters state.
+Distributed rate limiting using [Redis](https://redis.io/).
 
-## Basic usage
+Example usage:
 
-```javascript
-// Create new Counter
-const counter = new Counter({ limit: 1, ttl: 100 })
-try {
-  // Increment counter and get remainder
-  const remainder = await counter.count('key')
-  // Counter value equals 1
-  // Remainder value equals 0
-  // Next counter.count('key') call will return TTLError
-} catch (err) {
-  if (err instanceof TTLError) {
-    // Use err.ttl if need
-  } else {
-    // Handle err
-  }
-}
-```
+- [example](./src/examples/fixedWindow.ts) using [fixed window](./src/fixedWindow.ts) algorithm 
 
-## Example usage
+    ```npm run file src/examples/fixedWindow.ts```
+- [example](./src/examples/slidingWindow.ts) using [sliding window](./src/slidingWindow.ts) algorithm
 
-- [example](./src/examples/counter-gateway-default.ts) usage with default [gateway](./src/gateway/memory/gateway.ts)
-- [example](./src/examples/counter-gateway-memory.ts) usage with memory [gateway](./src/gateway/memory/gateway.ts)
-- [example](./src/examples/counter-gateway-redis.ts) usage with [Redis](https://redis.io/) [gateway](./src/gateway/redis/gateway.ts)
-- [example](./src/examples/counter-gateway-redis-2.ts) usage with [Redis](https://redis.io/) [gateway](./src/gateway/redis/gateway.ts) (with alternating counters)
+    ```npm run file src/examples/slidingWindow.ts```
