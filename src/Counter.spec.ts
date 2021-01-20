@@ -16,33 +16,33 @@ it('Counter', async () => {
     const resErr = new Error(errUnexpectedRedisResponse);
 
     const evalMock = jest.spyOn(client, 'evalsha');
-    evalMock.mockImplementation(makeEvalFn(redisErr, []));
+    evalMock.mockImplementation(mockCallback(redisErr, []));
     await expect(counter.count('', 1)).rejects.toThrow(redisErr);
 
-    evalMock.mockImplementation(makeEvalFn(null, undefined));
+    evalMock.mockImplementation(mockCallback(null, undefined));
     await expect(counter.count('', 1)).rejects.toThrow(resErr);
 
-    evalMock.mockImplementation(makeEvalFn(null, ['', -1]));
+    evalMock.mockImplementation(mockCallback(null, ['', -1]));
     await expect(counter.count('', 1)).rejects.toThrow(resErr);
 
-    evalMock.mockImplementation(makeEvalFn(null, [1, '']));
+    evalMock.mockImplementation(mockCallback(null, [1, '']));
     await expect(counter.count('', 1)).rejects.toThrow(resErr);
 
-    evalMock.mockImplementation(makeEvalFn(null, [1, -1]));
+    evalMock.mockImplementation(mockCallback(null, [1, -1]));
     await expect(counter.count('', 1)).resolves.toMatchObject({ ok: true, counter: 1, ttl: -1 });
 
-    evalMock.mockImplementation(makeEvalFn(null, [1, 0]));
+    evalMock.mockImplementation(mockCallback(null, [1, 0]));
     await expect(counter.count('', 1)).resolves.toMatchObject({ ok: false, counter: 1, ttl: 0 });
 
     const redisLoadErr = new Error('NOSCRIPT No matching script. Please use EVAL.');
 
     const loadMock = jest.spyOn(client, 'script');
-    evalMock.mockImplementation(makeEvalFn(redisLoadErr, []));
-    loadMock.mockImplementation(makeEvalFn(redisErr, undefined));
+    evalMock.mockImplementation(mockCallback(redisLoadErr, []));
+    loadMock.mockImplementation(mockCallback(redisErr, undefined));
     await expect(counter.count('', 1)).rejects.toThrow(redisErr);
 
-    evalMock.mockImplementationOnce(makeEvalFn(redisLoadErr, [])).mockImplementationOnce(makeEvalFn(null, [1, -1]));
-    loadMock.mockImplementation(makeEvalFn(null, undefined));
+    evalMock.mockImplementationOnce(mockCallback(redisLoadErr, [])).mockImplementationOnce(mockCallback(null, [1, -1]));
+    loadMock.mockImplementation(mockCallback(null, undefined));
     await expect(counter.count('', 1)).resolves.toMatchObject({ ok: true, counter: 1, ttl: -1 });
 
     loadMock.mockRestore();
@@ -51,7 +51,7 @@ it('Counter', async () => {
 
 type Res = (string | number)[] | string | undefined;
 
-function makeEvalFn(err: Error | null, res: Res) {
+function mockCallback(err: Error | null, res: Res) {
     return (...args: (string | number | Callback<Res>)[]): boolean => {
         const cb = args[args.length - 1];
         if (typeof cb === 'function') {
