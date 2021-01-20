@@ -1,5 +1,5 @@
 import { createClient, RedisClient, Callback } from 'redis';
-import { Counter, errMsgInvalidResponse } from './Counter';
+import { Counter, errUnexpectedRedisResponse } from './Counter';
 
 let client: RedisClient;
 beforeAll(() => {
@@ -13,7 +13,7 @@ it('Counter', async () => {
     const counter = new Counter({ client, size: 1000, limit: 100, script: '' });
 
     const redisErr = new Error('Redis error');
-    const resErr = new Error(errMsgInvalidResponse);
+    const resErr = new Error(errUnexpectedRedisResponse);
 
     const evalMock = jest.spyOn(client, 'evalsha');
     evalMock.mockImplementation(makeEvalFn(redisErr, []));

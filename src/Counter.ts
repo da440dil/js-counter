@@ -29,8 +29,8 @@ export interface ICounter {
     count(key: string, value: number): Promise<IResult>;
 }
 
-/** Error message which is thrown when Redis command returns response of invalid type. */
-export const errMsgInvalidResponse = 'Invalid redis response';
+/** Error message which is thrown when Redis command returns response of unexpected type. */
+export const errUnexpectedRedisResponse = 'Unexpected redis response';
 
 export class Counter implements ICounter {
     private client: RedisClient;
@@ -66,13 +66,13 @@ export class Counter implements ICounter {
                     return reject(err);
                 }
                 if (!Array.isArray(res)) {
-                    return reject(new Error(errMsgInvalidResponse));
+                    return reject(new Error(errUnexpectedRedisResponse));
                 }
                 if (typeof res[0] !== 'number') {
-                    return reject(new Error(errMsgInvalidResponse));
+                    return reject(new Error(errUnexpectedRedisResponse));
                 }
                 if (typeof res[1] !== 'number') {
-                    return reject(new Error(errMsgInvalidResponse));
+                    return reject(new Error(errUnexpectedRedisResponse));
                 }
                 resolve({ ok: res[1] === -1, counter: res[0], ttl: res[1] });
             });
