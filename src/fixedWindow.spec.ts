@@ -43,7 +43,7 @@ it('fixedWindow', async () => {
     expect(result.ttl).toBeGreaterThanOrEqual(0);
     expect(result.ttl).toBeLessThanOrEqual(size);
 
-    await sleep(result.ttl); // wait for the next window to start
+    await sleep(result.ttl + 100); // wait for the next window to start
 
     result = await counter.count(key, 70);
     expect(result.ok).toEqual(true);
