@@ -1,5 +1,5 @@
 import { RedisScript } from 'js-redis-script';
-import { ICounter, Counter, WindowParams, ScriptResponse } from './Counter';
+import { ICounter, Counter, WindowParams, CountResponse } from './Counter';
 
 const src = `
 local t = redis.call("time")
@@ -32,6 +32,6 @@ return { counter, -1 }
 
 /** Creates new counter which implements distributed rate limiting using sliding window algorithm. */
 export function slidingWindow({ client, size, limit }: WindowParams): ICounter {
-	const script = new RedisScript<ScriptResponse>({ client, src });
+	const script = new RedisScript<CountResponse>({ client, src });
 	return new Counter({ size, limit, script });
 }

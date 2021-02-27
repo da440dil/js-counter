@@ -10,10 +10,10 @@ export type WindowParams = {
     limit: number;
 };
 
-export type ScriptResponse = [number, number];
+export type CountResponse = [number, number];
 
 export type CounterParams = Omit<WindowParams, 'client'> & {
-    script: RedisScript<ScriptResponse>;
+    script: RedisScript<CountResponse>;
 };
 
 /** Result of count() operation. */
@@ -42,7 +42,7 @@ export interface ICounter {
 export class Counter implements ICounter {
     private size: number;
     private limit: number;
-    private script: RedisScript<ScriptResponse>;
+    private script: RedisScript<CountResponse>;
 
     constructor({ size, limit, script }: CounterParams) {
         this.size = size;

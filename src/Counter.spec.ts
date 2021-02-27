@@ -1,9 +1,9 @@
 import { RedisClient } from 'redis';
 import { RedisScript } from 'js-redis-script';
-import { Counter, ScriptResponse } from './Counter';
+import { Counter, CountResponse } from './Counter';
 
 it('Counter', async () => {
-    const script = new RedisScript<ScriptResponse>({
+    const script = new RedisScript<CountResponse>({
         client: {} as RedisClient,
         src: 'return {1,-1}'
     });
