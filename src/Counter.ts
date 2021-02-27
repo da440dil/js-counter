@@ -1,10 +1,20 @@
-import { createHash } from 'crypto';
 import { RedisClient } from 'redis';
-import { IWindowParam } from './IWindowParam';
+import { RedisScript } from 'js-redis-script';
 
-interface ICounterParam extends IWindowParam {
-    script: string;
-}
+export type WindowParams = {
+    /** Redis [client](https://github.com/NodeRedis/node-redis). */
+    client: RedisClient;
+    /** Window size in milliseconds. Must be greater than 0. */
+    size: number;
+    /** Maximum key value per window. Must be greater than 0. */
+    limit: number;
+};
+
+export type ScriptResponse = [number, number];
+
+export type CounterParams = Omit<WindowParams, 'client'> & {
+    script: RedisScript<ScriptResponse>;
+};
 
 /** Result of count() operation. */
 export interface IResult {
@@ -29,68 +39,19 @@ export interface ICounter {
     count(key: string, value: number): Promise<IResult>;
 }
 
-/** Error message which is thrown when Redis command returns response of unexpected type. */
-export const errUnexpectedRedisResponse = 'Unexpected redis response';
-
 export class Counter implements ICounter {
-    private client: RedisClient;
     private size: number;
     private limit: number;
-    private script: string;
-    private hash: string;
+    private script: RedisScript<ScriptResponse>;
 
-    constructor({ client, size, limit, script }: ICounterParam) {
-        this.client = client;
+    constructor({ size, limit, script }: CounterParams) {
         this.size = size;
         this.limit = limit;
         this.script = script;
-        this.hash = createHash('sha1').update(script).digest('hex');
     }
 
     public async count(key: string, value: number): Promise<IResult> {
-        try {
-            return await this.evalsha(key, value);
-        } catch (err) {
-            if (!isNoScriptErr(err)) {
-                throw err;
-            }
-            await this.load(this.script);
-            return this.evalsha(key, value);
-        }
+        const res = await this.script.run(1, key, value, this.size, this.limit);
+        return { ok: res[1] === -1, counter: res[0], ttl: res[1] };
     }
-
-    private evalsha(key: string, value: number): Promise<IResult> {
-        return new Promise((resolve, reject) => {
-            this.client.evalsha(this.hash, 1, key, value, this.size, this.limit, (err, res) => {
-                if (err) {
-                    return reject(err);
-                }
-                if (!Array.isArray(res)) {
-                    return reject(new Error(errUnexpectedRedisResponse));
-                }
-                if (typeof res[0] !== 'number') {
-                    return reject(new Error(errUnexpectedRedisResponse));
-                }
-                if (typeof res[1] !== 'number') {
-                    return reject(new Error(errUnexpectedRedisResponse));
-                }
-                resolve({ ok: res[1] === -1, counter: res[0], ttl: res[1] });
-            });
-        });
-    }
-
-    private load(script: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.client.script('load', script, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
-    }
-}
-
-function isNoScriptErr(err: unknown): boolean {
-    return err instanceof Error && err.message.startsWith('NOSCRIPT ');
 }

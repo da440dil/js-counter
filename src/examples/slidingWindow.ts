@@ -1,6 +1,8 @@
+import { promisify } from 'util';
 import { createClient } from 'redis';
 import { slidingWindow, IResult } from '..';
-import { sleep } from '../sleep';
+
+const sleep = promisify(setTimeout);
 
 async function main() {
     const client = createClient();
@@ -31,4 +33,7 @@ async function main() {
     client.quit();
 }
 
-main().catch((err) => { throw err; });
+main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

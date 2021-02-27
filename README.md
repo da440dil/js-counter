@@ -8,9 +8,11 @@ Distributed rate limiting using [Redis](https://redis.io/).
 [Example](./src/examples/fixedWindow.ts) using [fixed window](./src/fixedWindow.ts) algorithm:
 
 ```typescript
+import { promisify } from 'util';
 import { createClient } from 'redis';
 import { fixedWindow, IResult } from '..';
-import { sleep } from '../sleep';
+
+const sleep = promisify(setTimeout);
 
 async function main() {
     const client = createClient();
@@ -37,15 +39,20 @@ async function main() {
     client.quit();
 }
 
-main().catch((err) => { throw err; });
+main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+});
 ```
 
 [Example](./src/examples/slidingWindow.ts) using [sliding window](./src/slidingWindow.ts) algorithm:
 
 ```typescript
+import { promisify } from 'util';
 import { createClient } from 'redis';
 import { slidingWindow, IResult } from '..';
-import { sleep } from '../sleep';
+
+const sleep = promisify(setTimeout);
 
 async function main() {
     const client = createClient();
@@ -76,5 +83,8 @@ async function main() {
     client.quit();
 }
 
-main().catch((err) => { throw err; });
+main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+});
 ```

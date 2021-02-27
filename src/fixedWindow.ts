@@ -1,7 +1,7 @@
-import { ICounter, Counter } from './Counter';
-import { IWindowParam } from './IWindowParam';
+import { RedisScript } from 'js-redis-script';
+import { ICounter, Counter, WindowParams, ScriptResponse } from './Counter';
 
-const script = `
+const src = `
 local counter = redis.call("get", KEYS[1])
 if counter == false then
 	counter = 0
@@ -17,6 +17,7 @@ return { redis.call("incrby", KEYS[1], ARGV[1]), -1 }
 `;
 
 /** Creates new counter which implements distributed rate limiting using fixed window algorithm. */
-export function fixedWindow({ client, size, limit }: IWindowParam): ICounter {
-    return new Counter({ client, size, limit, script });
+export function fixedWindow({ client, size, limit }: WindowParams): ICounter {
+    const script = new RedisScript<ScriptResponse>({ client, src });
+    return new Counter({ size, limit, script });
 }

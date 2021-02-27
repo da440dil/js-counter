@@ -1,15 +1,18 @@
+import { promisify } from 'util';
 import { createClient, RedisClient } from 'redis';
 import { fixedWindow } from './fixedWindow';
-import { sleep } from './sleep';
 
-const key = 'key';
+const sleep = promisify(setTimeout);
+
+const key = 'fw';
 
 let client: RedisClient;
-beforeAll(() => {
+beforeAll((cb) => {
     client = createClient();
+    client.del(key, cb);
 });
-afterAll(() => {
-    client.quit();
+afterAll((cb) => {
+    client.quit(cb);
 });
 beforeEach((cb) => {
     client.del(key, cb);

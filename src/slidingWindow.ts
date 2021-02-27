@@ -1,7 +1,7 @@
-import { ICounter, Counter } from './Counter';
-import { IWindowParam } from './IWindowParam';
+import { RedisScript } from 'js-redis-script';
+import { ICounter, Counter, WindowParams, ScriptResponse } from './Counter';
 
-const script = `
+const src = `
 local t = redis.call("time")
 local now = t[1] * 1000 + math.floor(t[2]/1000)
 local size = ARGV[2]
@@ -31,6 +31,7 @@ return { counter, -1 }
 `;
 
 /** Creates new counter which implements distributed rate limiting using sliding window algorithm. */
-export function slidingWindow({ client, size, limit }: IWindowParam): ICounter {
-	return new Counter({ client, size, limit, script });
+export function slidingWindow({ client, size, limit }: WindowParams): ICounter {
+	const script = new RedisScript<ScriptResponse>({ client, src });
+	return new Counter({ size, limit, script });
 }
