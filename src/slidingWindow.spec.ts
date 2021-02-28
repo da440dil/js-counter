@@ -7,9 +7,8 @@ const sleep = promisify(setTimeout);
 const key = 'sw';
 
 let client: RedisClient;
-beforeAll((cb) => {
+beforeAll(() => {
     client = createClient();
-    client.del(key, cb);
 });
 afterAll((cb) => {
     client.quit(cb);

@@ -1,20 +1,21 @@
 import { RedisClient } from 'redis';
-import { RedisScript } from 'js-redis-script';
-import { Counter, CountResponse } from './Counter';
+import { Counter } from './Counter';
+
+const runMock = jest.fn();
+jest.mock('js-redis-script', () => {
+    return {
+        RedisScript: jest.fn().mockImplementation(() => {
+            return { run: runMock };
+        }),
+    };
+});
 
 it('Counter', async () => {
-    const script = new RedisScript<CountResponse>({
-        client: {} as RedisClient,
-        src: 'return {1,-1}'
-    });
-    const counter = new Counter({ size: 1000, limit: 100, script });
-    const scriptMock = jest.spyOn(script, 'run');
+    const counter = new Counter({ client: {} as RedisClient, size: 1000, limit: 100, src: '' });
 
-    scriptMock.mockImplementation(() => Promise.resolve([1, -1]));
+    runMock.mockImplementation(() => Promise.resolve([1, -1]));
     await expect(counter.count('', 1)).resolves.toMatchObject({ ok: true, counter: 1, ttl: -1 });
 
-    scriptMock.mockImplementation(() => Promise.resolve([1, 2]));
+    runMock.mockImplementation(() => Promise.resolve([1, 2]));
     await expect(counter.count('', 1)).resolves.toMatchObject({ ok: false, counter: 1, ttl: 2 });
-
-    scriptMock.mockRestore();
 });
