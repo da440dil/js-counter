@@ -1,5 +1,5 @@
 import { RedisClient } from 'redis';
-import { RedisScript } from 'js-redis-script';
+import { RedisScript } from '@da440dil/js-redis-script';
 
 export type WindowParams = {
     /** Redis [client](https://github.com/NodeRedis/node-redis). */

@@ -2,7 +2,7 @@ import { RedisClient } from 'redis';
 import { Counter } from './Counter';
 
 const runMock = jest.fn();
-jest.mock('js-redis-script', () => {
+jest.mock('@da440dil/js-redis-script', () => {
     return {
         RedisScript: jest.fn().mockImplementation(() => {
             return { run: runMock };
