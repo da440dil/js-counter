@@ -1,6 +1,3 @@
-import { ICounter, Counter, WindowParams } from './Counter';
-
-const src = `
 local t = redis.call("time")
 local now = t[1] * 1000 + math.floor(t[2]/1000)
 local size = ARGV[2]
@@ -27,9 +24,3 @@ else
 	redis.call("incrby", currWindowKey, ARGV[1])
 end
 return { counter, -1 }
-`;
-
-/** Creates new counter which implements distributed rate limiting using sliding window algorithm. */
-export function slidingWindow({ client, size, limit }: WindowParams): ICounter {
-	return new Counter({ client, size, limit, src });
-}
