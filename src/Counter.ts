@@ -34,11 +34,11 @@ export class Counter implements ICounter {
 	constructor({ client, size, limit, src }: WindowParams & { src: string; }) {
 		this.size = size;
 		this.limit = limit;
-		this.script = new RedisScript<[number, number]>({ client, src });
+		this.script = new RedisScript<[number, number]>({ client, src, keysNum: 1 });
 	}
 
 	public async count(key: string, value: number): Promise<IResult> {
-		const res = await this.script.run(1, key, value, this.size, this.limit);
+		const res = await this.script.run(key, value, this.size, this.limit);
 		return { ok: res[1] === -1, counter: res[0], ttl: res[1] };
 	}
 }
