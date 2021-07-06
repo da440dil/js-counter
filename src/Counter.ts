@@ -1,5 +1,3 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { RedisClient } from 'redis';
 import { RedisScript } from '@da440dil/js-redis-script';
 
@@ -43,7 +41,7 @@ export class Counter implements ICounter {
 	}
 }
 
-type WindowParams = {
+export type WindowParams = {
 	/** Redis [client](https://github.com/NodeRedis/node-redis). */
 	client: RedisClient;
 	/** Window size in milliseconds. Must be greater than 0. */
@@ -51,17 +49,3 @@ type WindowParams = {
 	/** Maximum key value per window. Must be greater than 0. */
 	limit: number;
 };
-
-const fwsrc = readFileSync(join(__dirname, './fixedwindow.lua')).toString();
-
-/** Creates new counter which implements distributed rate limiting using fixed window algorithm. */
-export function fixedWindow({ client, size, limit }: WindowParams): ICounter {
-	return new Counter({ client, size, limit, src: fwsrc });
-}
-
-const swsrc = readFileSync(join(__dirname, './slidingwindow.lua')).toString();
-
-/** Creates new counter which implements distributed rate limiting using sliding window algorithm. */
-export function slidingWindow({ client, size, limit }: WindowParams): ICounter {
-	return new Counter({ client, size, limit, src: swsrc });
-}

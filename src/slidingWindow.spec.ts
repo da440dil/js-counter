@@ -1,6 +1,7 @@
 import { promisify } from 'util';
 import { createClient, RedisClient } from 'redis';
-import { slidingWindow } from '.';
+import { slidingWindow } from './slidingWindow';
+import { Counter } from './Counter';
 
 const sleep = promisify(setTimeout);
 
@@ -19,12 +20,14 @@ beforeEach((cb) => {
 
 it('slidingWindow', async () => {
 	const size = 1000;
-	const counter = slidingWindow({ client, size, limit: 100 });
+	const limit = 100;
+	const counter = slidingWindow({ client, size, limit });
+	expect(counter).toBeInstanceOf(Counter);
 
 	let result = await counter.count(key, 101);
 	expect(result.ok).toEqual(false);
 	expect(result.counter).toEqual(0);
-	expect(result.ttl).toBeGreaterThan(-1);
+	expect(result.ttl).toBeGreaterThanOrEqual(0);
 	expect(result.ttl).toBeLessThanOrEqual(size);
 
 	await sleep(result.ttl); // wait for the next window to start
@@ -50,7 +53,7 @@ it('slidingWindow', async () => {
 	result = await counter.count(key, 70);
 	expect(result.ok).toEqual(false);
 	expect(result.counter).toBeGreaterThan(30);
-	expect(result.counter).toBeLessThanOrEqual(100);
+	expect(result.counter).toBeLessThanOrEqual(limit);
 	expect(result.ttl).toBeGreaterThanOrEqual(0);
 	expect(result.ttl).toBeLessThanOrEqual(size);
 
@@ -59,6 +62,8 @@ it('slidingWindow', async () => {
 	result = await counter.count(key, 70);
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toBeGreaterThan(70);
-	expect(result.counter).toBeLessThanOrEqual(100);
+	expect(result.counter).toBeLessThanOrEqual(limit);
 	expect(result.ttl).toEqual(-1);
+
+	expect(slidingWindow({ client, size, limit })).toBeInstanceOf(Counter);
 });

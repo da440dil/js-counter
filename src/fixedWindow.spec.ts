@@ -1,6 +1,7 @@
 import { promisify } from 'util';
 import { createClient, RedisClient } from 'redis';
-import { fixedWindow } from '.';
+import { fixedWindow } from './fixedWindow';
+import { Counter } from './Counter';
 
 const sleep = promisify(setTimeout);
 
@@ -20,6 +21,7 @@ beforeEach((cb) => {
 it('fixedWindow', async () => {
 	const size = 1000;
 	const counter = fixedWindow({ client, size, limit: 100 });
+	expect(counter).toBeInstanceOf(Counter);
 
 	let result = await counter.count(key, 101);
 	expect(result.ok).toEqual(false);
@@ -48,4 +50,6 @@ it('fixedWindow', async () => {
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toEqual(70);
 	expect(result.ttl).toEqual(-1);
+
+	expect(fixedWindow({ client, size, limit: 100 })).toBeInstanceOf(Counter);
 });
