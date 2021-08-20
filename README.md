@@ -45,6 +45,10 @@ main().catch((err) => {
 });
 ```
 
+```
+npm run file src/examples/fixedWindow.ts
+```
+
 [Example](./src/examples/slidingWindow.ts) using [sliding window](./src/slidingWindow.ts) algorithm:
 
 ```typescript
@@ -87,4 +91,8 @@ main().catch((err) => {
     console.error(err);
     process.exit(1);
 });
+```
+
+```
+npm run file src/examples/slidingWindow.ts
 ```
