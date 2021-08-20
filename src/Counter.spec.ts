@@ -1,21 +1,25 @@
-import { RedisClient } from 'redis';
+import { IRedisClient } from '@da440dil/js-redis-script';
 import { Counter } from './Counter';
 
-const runMock = jest.fn();
+const run = jest.fn();
 jest.mock('@da440dil/js-redis-script', () => {
 	return {
-		RedisScript: jest.fn().mockImplementation(() => {
-			return { run: runMock };
+		createScript: jest.fn().mockImplementation(() => {
+			return { run };
 		})
 	};
 });
 
+afterAll(() => {
+	jest.unmock('@da440dil/js-redis-script');
+});
+
 it('Counter', async () => {
-	const counter = new Counter({ client: {} as RedisClient, size: 1000, limit: 100, src: '' });
+	const counter = new Counter({ client: {} as IRedisClient, size: 1000, limit: 100, src: '' });
 
-	runMock.mockImplementation(() => Promise.resolve([1, -1]));
-	await expect(counter.count('', 1)).resolves.toMatchObject({ ok: true, counter: 1, ttl: -1 });
+	run.mockImplementation(() => Promise.resolve([1, -1]));
+	await expect(counter.count('', 1)).resolves.toEqual({ ok: true, counter: 1, ttl: -1 });
 
-	runMock.mockImplementation(() => Promise.resolve([1, 2]));
-	await expect(counter.count('', 1)).resolves.toMatchObject({ ok: false, counter: 1, ttl: 2 });
+	run.mockImplementation(() => Promise.resolve([1, 2]));
+	await expect(counter.count('', 1)).resolves.toEqual({ ok: false, counter: 1, ttl: 2 });
 });
