@@ -5,7 +5,7 @@
 
 Distributed rate limiting using [Redis](https://redis.io/).
 
-[Example](./src/examples/fixedWindow.ts) using [fixed window](./src/fixedWindow.ts) algorithm:
+[Example](./src/examples/fixedWindow.ts) using [fixed window](./src/fixedwindow.lua) algorithm:
 
 ```typescript
 import { promisify } from 'util';
@@ -49,7 +49,7 @@ main().catch((err) => {
 npm run file src/examples/fixedWindow.ts
 ```
 
-[Example](./src/examples/slidingWindow.ts) using [sliding window](./src/slidingWindow.ts) algorithm:
+[Example](./src/examples/slidingWindow.ts) using [sliding window](./src/slidingwindow.lua) algorithm:
 
 ```typescript
 import { promisify } from 'util';
@@ -95,4 +95,9 @@ main().catch((err) => {
 
 ```
 npm run file src/examples/slidingWindow.ts
+```
+
+[Benchmarks](./src/benchmarks)
+```
+npm run file src/benchmarks/benchmark.ts
 ```
