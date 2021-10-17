@@ -15,7 +15,7 @@ afterAll(() => {
 });
 
 it('Counter', async () => {
-	const counter = new Counter({ client: {} as IRedisClient, size: 1000, limit: 100, src: '' });
+	const counter = new Counter({} as IRedisClient, { size: 1000, limit: 100, src: '' });
 
 	run.mockImplementation(() => Promise.resolve([1, -1]));
 	await expect(counter.count('', 1)).resolves.toEqual({ ok: true, counter: 1, ttl: -1 });

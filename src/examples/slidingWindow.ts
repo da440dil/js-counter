@@ -1,15 +1,15 @@
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { slidingWindow, IResult } from '..';
+import { slidingWindow, CountResult } from '..';
 
 const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
-	const counter = slidingWindow({ client, size: 1000, limit: 100 });
+	const counter = slidingWindow(client, { size: 1000, limit: 100 });
 
 	const key = 'key';
-	const count = async (value: number): Promise<IResult> => {
+	const count = async (value: number): Promise<CountResult> => {
 		const result = await counter.count(key, value);
 		console.log('Value: %d, result: %O', value, result);
 		return result;

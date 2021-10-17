@@ -23,10 +23,10 @@ async function app(client: RedisClient): Promise<void> {
 	const size = 60000;
 	const limit = batchSize + 1;
 
-	const fixedWindowCounter = fixedWindow({ client, size, limit });
+	const fixedWindowCounter = fixedWindow(client, { size, limit });
 	const fixedWindowTime = await test(client, fixedWindowCounter, key, value, batchSize);
 
-	const slidingWindowCounter = slidingWindow({ client, size, limit });
+	const slidingWindowCounter = slidingWindow(client, { size, limit });
 	const slidingWindowTime = await test(client, slidingWindowCounter, key, value, batchSize);
 
 	console.table({
