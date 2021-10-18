@@ -5,19 +5,17 @@ export interface ICounter {
 	 * @param key The key to be incremented.
 	 * @param value The value the key value to be incremented by.
 	 */
-	count(key: string, value: number): Promise<CountResult>;
+	count(key: string, value: number): Promise<Result>;
 }
 
-/** Result of count() operation. */
-export type CountResult = {
+/** Counter value increment result. */
+export type Result = {
 	/** Operation success flag. */
 	ok: boolean;
-	/**
-	 * Counter after increment.
-	 * With fixed window algorithm in use counter is current window counter.
-	 * With sliding window algorithm in use counter is sliding window counter.
-	 */
+	/** Current counter value. */
 	counter: number;
+	/** Diff between limit and current counter value. */
+	remainder: number;
 	/**
 	 * TTL of the current window in milliseconds.
 	 * Makes sense if operation failed, otherwise ttl is less than 0.

@@ -1,6 +1,6 @@
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { slidingWindow, CountResult } from '..';
+import { slidingWindow, Result } from '..';
 
 const sleep = promisify(setTimeout);
 
@@ -9,7 +9,7 @@ async function main() {
 	const counter = slidingWindow(client, { size: 1000, limit: 100 });
 
 	const key = 'key';
-	const count = async (value: number): Promise<CountResult> => {
+	const count = async (value: number): Promise<Result> => {
 		const result = await counter.count(key, value);
 		console.log('Value: %d, result: %O', value, result);
 		return result;
@@ -23,12 +23,12 @@ async function main() {
 	await sleep(700); // wait for the most time of the current window to pass
 	await count(70);
 	// Output:
-	// Value: 101, result: { ok: false, counter: 0, ttl: 340 }
-	// Value: 20, result: { ok: true, counter: 20, ttl: -1 }
-	// Value: 30, result: { ok: true, counter: 50, ttl: -1 }
-	// Value: 51, result: { ok: false, counter: 50, ttl: 991 }
-	// Value: 70, result: { ok: false, counter: 49, ttl: 982 }
-	// Value: 70, result: { ok: true, counter: 83, ttl: -1 }
+	// Value: 101, result: { ok: false, counter: 0, remainder: 100, ttl: 732 }
+	// Value: 20, result: { ok: true, counter: 20, remainder: 80, ttl: -1 }
+	// Value: 30, result: { ok: true, counter: 50, remainder: 50, ttl: -1 }
+	// Value: 51, result: { ok: false, counter: 50, remainder: 50, ttl: 994 }
+	// Value: 70, result: { ok: false, counter: 49, remainder: 51, ttl: 985 }
+	// Value: 70, result: { ok: true, counter: 83, remainder: 17, ttl: -1 }
 
 	client.quit();
 }

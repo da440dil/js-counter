@@ -17,9 +17,12 @@ afterAll(() => {
 it('Counter', async () => {
 	const counter = new Counter({} as IRedisClient, { size: 1000, limit: 100, src: '' });
 
-	run.mockImplementation(() => Promise.resolve([1, -1]));
-	await expect(counter.count('', 1)).resolves.toEqual({ ok: true, counter: 1, ttl: -1 });
+	run.mockImplementation(() => Promise.resolve([1, -2]));
+	await expect(counter.count('', 1)).resolves.toEqual({ ok: false, counter: 1, remainder: 99, ttl: 0 });
 
-	run.mockImplementation(() => Promise.resolve([1, 2]));
-	await expect(counter.count('', 1)).resolves.toEqual({ ok: false, counter: 1, ttl: 2 });
+	run.mockImplementation(() => Promise.resolve([1, -1]));
+	await expect(counter.count('', 1)).resolves.toEqual({ ok: true, counter: 1, remainder: 99, ttl: -1 });
+
+	run.mockImplementation(() => Promise.resolve([74, 75]));
+	await expect(counter.count('', 1)).resolves.toEqual({ ok: false, counter: 74, remainder: 26, ttl: 75 });
 });

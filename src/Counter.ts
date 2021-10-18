@@ -1,6 +1,5 @@
 import { IRedisClient, IRedisScript, createScript } from '@da440dil/js-redis-script';
-
-import { ICounter, CountResult } from './ICounter';
+import { ICounter, Result } from './ICounter';
 
 export class Counter implements ICounter {
 	private size: number;
@@ -13,9 +12,14 @@ export class Counter implements ICounter {
 		this.script = createScript<[number, number]>({ client, src, numberOfKeys: 1 });
 	}
 
-	public async count(key: string, value: number): Promise<CountResult> {
+	public async count(key: string, value: number): Promise<Result> {
 		const res = await this.script.run(key, value, this.size, this.limit);
-		return { ok: res[1] === -1, counter: res[0], ttl: res[1] };
+		return {
+			ok: res[1] === -1,
+			counter: res[0],
+			remainder: this.limit - res[0],
+			ttl: res[1] === -2 ? 0 : res[1]
+		};
 	}
 }
 

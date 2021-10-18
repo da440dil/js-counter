@@ -2,13 +2,12 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { IRedisClient } from '@da440dil/js-redis-script';
 import { Counter, WindowParams } from './Counter';
-import { ICounter } from './ICounter';
+import { ICounter, Result } from './ICounter';
 import { Limiter } from './Limiter';
 import { LimiterSuite } from './LimiterSuite';
-import { ILimiter, LimitResult } from './ILimiter';
+import { ILimiter } from './ILimiter';
 
-export { ICounter, CountResult } from './ICounter';
-export { IRedisClient, WindowParams, LimitResult };
+export { IRedisClient, WindowParams, ICounter, Result, ILimiter };
 
 let fixedWindowSrc: string;
 
