@@ -12,7 +12,11 @@ export { IRedisClient, WindowParams, LimitResult };
 
 let fixedWindowSrc: string;
 
-/** Creates new counter which implements distributed counter using fixed window algorithm. */
+/**
+ * Creates new counter which implements distributed counter using fixed window algorithm.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param params Window params.
+ */
 export const fixedWindow = (client: IRedisClient, { size, limit }: WindowParams): ICounter => {
 	if (!fixedWindowSrc) {
 		fixedWindowSrc = readFileSync(resolve(__dirname, '../fixedwindow.lua')).toString();
@@ -22,7 +26,11 @@ export const fixedWindow = (client: IRedisClient, { size, limit }: WindowParams)
 
 let slidingWindowSrc: string;
 
-/** Creates new counter which implements distributed counter using sliding window algorithm. */
+/**
+ * Creates new counter which implements distributed counter using sliding window algorithm.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param params Window params.
+ */
 export const slidingWindow = (client: IRedisClient, { size, limit }: WindowParams): ICounter => {
 	if (!slidingWindowSrc) {
 		slidingWindowSrc = readFileSync(resolve(__dirname, '../slidingwindow.lua')).toString();
@@ -30,12 +38,17 @@ export const slidingWindow = (client: IRedisClient, { size, limit }: WindowParam
 	return new Counter(client, { size, limit, src: slidingWindowSrc });
 };
 
-/** Creates new limiter which implements distributed rate limiting. */
-export const createLimiter = (client: IRedisClient, param: LimiterParams, ...params: LimiterParams[]): ILimiter => {
-	if (params.length === 0) {
-		return fromWindowType(client, param);
+/**
+ * Creates new limiter which implements distributed rate limiting.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param first Params of the first limiter.
+ * @param rest Params of the rest limiters.
+ */
+export const createLimiter = (client: IRedisClient, first: LimiterParams, ...rest: LimiterParams[]): ILimiter => {
+	if (rest.length === 0) {
+		return fromWindowType(client, first);
 	}
-	return new LimiterSuite(params.concat(param).map((v) => fromWindowType(client, v)));
+	return new LimiterSuite(rest.concat(first).map((v) => fromWindowType(client, v)));
 };
 
 export const WindowType = {
