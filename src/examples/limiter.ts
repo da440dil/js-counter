@@ -1,15 +1,6 @@
-# js-counter
-
-[![Build Status](https://travis-ci.com/da440dil/js-counter.svg?branch=master)](https://travis-ci.com/da440dil/js-counter)
-[![Coverage Status](https://coveralls.io/repos/github/da440dil/js-counter/badge.svg?branch=master)](https://coveralls.io/github/da440dil/js-counter?branch=master)
-
-Distributed rate limiting using [Redis](https://redis.io/).
-
-[Example](./src/examples/limiter.ts) usage:
-```typescript
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { createLimiter } from '@da440dil/js-counter';
+import { createLimiter } from '..';
 
 const sleep = promisify(setTimeout);
 
@@ -45,13 +36,3 @@ main().catch((err) => {
 	console.error(err);
 	process.exit(1);
 });
-```
-
-```
-npm run file src/examples/limiter.ts
-```
-
-[Benchmarks](./src/benchmarks)
-```
-npm run file src/benchmarks/benchmark.ts
-```
