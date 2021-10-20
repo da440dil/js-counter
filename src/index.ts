@@ -47,7 +47,7 @@ export const createLimiter = (client: IRedisClient, first: LimiterParams, ...res
 	if (rest.length === 0) {
 		return fromWindowType(client, first);
 	}
-	return new LimiterSuite(rest.concat(first).map((v) => fromWindowType(client, v)));
+	return new LimiterSuite([first].concat(rest).map((v) => fromWindowType(client, v)));
 };
 
 export const WindowType = {
