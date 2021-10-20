@@ -60,6 +60,8 @@ export const WindowType = {
 export type WindowType = typeof WindowType[keyof typeof WindowType];
 
 export type LimiterParams = {
+	/** Unique limiter name, every Redis key will be prefixed with this name. */
+	name?: string;
 	/**
 	 * One of algorithms: "fixed" for the fixed window algorithm, "sliding" for the sliding window algorithm.
 	 * By default equal "fixed".
@@ -72,7 +74,7 @@ export type LimiterParams = {
 	rate?: number;
 } & WindowParams;
 
-function fromWindowType(client: IRedisClient, { type = WindowType.Fixed, rate = 1, size, limit }: LimiterParams): ILimiter {
+function fromWindowType(client: IRedisClient, { name = String(Math.random()).slice(2), type = WindowType.Fixed, rate = 1, size, limit }: LimiterParams): ILimiter {
 	const counter = type === WindowType.Sliding ? slidingWindow(client, { size, limit }) : fixedWindow(client, { size, limit });
-	return new Limiter(rate, counter);
+	return new Limiter(name, rate, counter);
 }
