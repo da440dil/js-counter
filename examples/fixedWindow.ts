@@ -1,6 +1,6 @@
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { fixedWindow, Result } from '..';
+import { fixedWindow, Result } from '../src';
 
 const sleep = promisify(setTimeout);
 

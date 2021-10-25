@@ -1,6 +1,6 @@
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { createLimiter } from '..';
+import { createLimiter } from '../src';
 
 const sleep = promisify(setTimeout);
 
@@ -13,14 +13,14 @@ async function main() {
 	);
 
 	const key = 'key';
-	const next = async (): Promise<void> => {
-		const result = await limiter.next(key);
+	const limit = async (): Promise<void> => {
+		const result = await limiter.limit(key);
 		console.log('Result: %O', result);
 	};
 
-	await Promise.all([next(), next(), next(), next()]);
+	await Promise.all([limit(), limit(), limit(), limit()]);
 	await sleep(1000); // wait for the next window to start
-	await Promise.all([next(), next()]);
+	await Promise.all([limit(), limit()]);
 	// Output:
 	// Result: { ok: true, counter: 1, remainder: 2, ttl: -1 }
 	// Result: { ok: true, counter: 2, remainder: 1, ttl: -1 }

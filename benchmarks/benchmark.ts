@@ -1,6 +1,6 @@
 import { hrtime } from 'process';
 import { createClient, RedisClient } from 'redis';
-import { fixedWindow, slidingWindow, ICounter } from '..';
+import { fixedWindow, slidingWindow, ICounter } from '../src';
 
 async function main() {
 	const client = createClient();
