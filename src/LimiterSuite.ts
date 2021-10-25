@@ -10,8 +10,8 @@ export class LimiterSuite implements ILimiter {
 		this.limiters = limiters;
 	}
 
-	public async next(key: string): Promise<Result> {
-		const results = await Promise.all(this.limiters.map((limiter) => limiter.next(key)));
+	public async limit(key: string): Promise<Result> {
+		const results = await Promise.all(this.limiters.map((limiter) => limiter.limit(key)));
 		let ok = true;
 		let counter = 0;
 		let remainder = maxInt;

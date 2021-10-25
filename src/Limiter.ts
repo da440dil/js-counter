@@ -12,7 +12,7 @@ export class Limiter implements ILimiter {
 		this.counter = counter;
 	}
 
-	public next(key: string): Promise<Result> {
+	public limit(key: string): Promise<Result> {
 		return this.counter.count(`${this.name}:${key}`, this.rate);
 	}
 }
