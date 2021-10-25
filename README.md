@@ -5,7 +5,7 @@
 
 Distributed rate limiting using [Redis](https://redis.io/).
 
-[Example](./src/examples/limiter.ts) usage:
+[Example](./examples/limiter.ts) usage:
 ```typescript
 import { promisify } from 'util';
 import { createClient } from 'redis';
@@ -22,14 +22,14 @@ async function main() {
 	);
 
 	const key = 'key';
-	const next = async (): Promise<void> => {
-		const result = await limiter.next(key);
+	const limit = async (): Promise<void> => {
+		const result = await limiter.limit(key);
 		console.log('Result: %O', result);
 	};
 
-	await Promise.all([next(), next(), next(), next()]);
+	await Promise.all([limit(), limit(), limit(), limit()]);
 	await sleep(1000); // wait for the next window to start
-	await Promise.all([next(), next()]);
+	await Promise.all([limit(), limit()]);
 	// Output:
 	// Result: { ok: true, counter: 1, remainder: 2, ttl: -1 }
 	// Result: { ok: true, counter: 2, remainder: 1, ttl: -1 }
@@ -48,10 +48,10 @@ main().catch((err) => {
 ```
 
 ```
-npm run file src/examples/limiter.ts
+npm run file examples/limiter.ts
 ```
 
-[Benchmarks](./src/benchmarks)
+[Benchmarks](./benchmarks)
 ```
-npm run file src/benchmarks/benchmark.ts
+npm run file benchmarks/benchmark.ts
 ```
