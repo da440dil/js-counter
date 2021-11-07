@@ -12,31 +12,22 @@ export class LimiterSuite implements ILimiter {
 
 	public async limit(key: string): Promise<Result> {
 		const results = await Promise.all(this.limiters.map((limiter) => limiter.limit(key)));
-		let ok = true;
-		let counter = 0;
-		let remainder = maxInt;
-		let ttl = -1;
+		let result: Result = { ok: true, counter: 0, remainder: maxInt, ttl: -1 };
 		for (const v of results) {
 			if (v.ok) {
-				if (ok && remainder > v.remainder) { // minimal remainder
-					counter = v.counter;
-					remainder = v.remainder;
+				if (result.ok && result.remainder > v.remainder) { // minimal remainder
+					result = v;
 				}
 				continue;
 			}
-			if (ok) { // not ok first time
-				ok = false;
-				ttl = v.ttl;
-				counter = v.counter;
-				remainder = v.remainder;
+			if (result.ok) { // not ok first time
+				result = v;
 				continue;
 			}
-			if (ttl < v.ttl) { // maximum TTL
-				ttl = v.ttl;
-				counter = v.counter;
-				remainder = v.remainder;
+			if (result.ttl < v.ttl) { // maximum TTL
+				result = v;
 			}
 		}
-		return { ok, counter, remainder, ttl };
+		return result;
 	}
 }
