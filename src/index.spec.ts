@@ -1,7 +1,7 @@
 import { promisify } from 'util';
 import { createClient, RedisClient } from 'redis';
 import { IRedisClient } from '@da440dil/js-redis-script';
-import { Counter, createLimiter, LimiterParams, WindowType } from '.';
+import { Counter, createLimiter, Params, Algorithm } from '.';
 import { Limiter } from './Limiter';
 import { LimiterSuite } from './LimiterSuite';
 
@@ -127,7 +127,7 @@ describe('createLimiter', () => {
 	});
 
 	const client = {} as IRedisClient;
-	const params: LimiterParams = { size: 1000, limit: 100 };
+	const params: Params = { size: 1000, limit: 100 };
 
 	it('should create Limiter with single param', () => {
 		expect(createLimiter(client, params)).toBeInstanceOf(Limiter);
@@ -137,20 +137,20 @@ describe('createLimiter', () => {
 		expect(createLimiter(client, params, params)).toBeInstanceOf(LimiterSuite);
 	});
 
-	it('should use fixed fixed window algorithm without param.type', () => {
+	it('should use fixed fixed window algorithm without param.algorithm', () => {
 		createLimiter(client, params);
 		expect(fixedWindow.mock.calls.length).toBe(1);
 		expect(slidingWindow.mock.calls.length).toBe(0);
 	});
 
-	it(`should use fixed fixed window algorithm with "${WindowType.Fixed}" param.type`, () => {
-		createLimiter(client, { ...params, type: WindowType.Fixed });
+	it(`should use fixed fixed window algorithm with "${Algorithm.Fixed}" param.algorithm`, () => {
+		createLimiter(client, { ...params, algorithm: Algorithm.Fixed });
 		expect(fixedWindow.mock.calls.length).toBe(1);
 		expect(slidingWindow.mock.calls.length).toBe(0);
 	});
 
-	it(`should use fixed fixed window algorithm with "${WindowType.Sliding}" param.type`, () => {
-		createLimiter(client, { ...params, type: WindowType.Sliding });
+	it(`should use fixed fixed window algorithm with "${Algorithm.Sliding}" param.algorithm`, () => {
+		createLimiter(client, { ...params, algorithm: Algorithm.Sliding });
 		expect(fixedWindow.mock.calls.length).toBe(0);
 		expect(slidingWindow.mock.calls.length).toBe(1);
 	});
