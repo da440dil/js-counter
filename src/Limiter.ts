@@ -3,17 +3,17 @@ import { Result } from './Result';
 import { ILimiter } from './ILimiter';
 
 export class Limiter implements ILimiter {
-	private name: string;
-	private rate: number;
 	private counter: Counter;
+	private prefix: string;
+	private rate: number;
 
-	constructor(name: string, rate: number, counter: Counter) {
-		this.name = name;
-		this.rate = rate;
+	constructor(counter: Counter, name: string, rate: number) {
 		this.counter = counter;
+		this.prefix = `${name}:`;
+		this.rate = rate;
 	}
 
 	public limit(key: string): Promise<Result> {
-		return this.counter.count(`${this.name}:${key}`, this.rate);
+		return this.counter.count(`${this.prefix}${key}`, this.rate);
 	}
 }

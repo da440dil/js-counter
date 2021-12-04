@@ -50,5 +50,5 @@ export type Algorithm = typeof Algorithm[keyof typeof Algorithm];
 
 function fromAlgorithm(client: IRedisClient, { size, limit, name = String(Math.random()).slice(2), rate = 1, algorithm = Algorithm.Fixed }: Params): ILimiter {
 	const counter = algorithm === Algorithm.Sliding ? Counter.slidingWindow(client, size, limit) : Counter.fixedWindow(client, size, limit);
-	return new Limiter(name, rate, counter);
+	return new Limiter(counter, name, rate);
 }
