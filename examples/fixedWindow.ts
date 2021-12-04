@@ -1,12 +1,12 @@
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { fixedWindow, Result } from '../src';
+import { Counter, Result } from '../src';
 
 const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
-	const counter = fixedWindow(client, { size: 1000, limit: 100 });
+	const counter = Counter.fixedWindow(client, 1000, 100);
 
 	const key = 'key';
 	const count = async (value: number): Promise<Result> => {

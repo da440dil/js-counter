@@ -1,4 +1,4 @@
-import { Result } from './ICounter';
+import { Result } from './Counter';
 import { LimiterSuite } from './LimiterSuite';
 
 it('should return ok using minimal remainder algorithm if all limiters ok', async () => {

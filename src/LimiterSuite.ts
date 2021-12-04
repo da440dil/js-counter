@@ -1,4 +1,4 @@
-import { Result } from './ICounter';
+import { Result } from './Counter';
 import { ILimiter } from './ILimiter';
 
 const maxInt = Number.MAX_SAFE_INTEGER;

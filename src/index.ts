@@ -1,41 +1,10 @@
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { IRedisClient } from '@da440dil/js-redis-script';
-import { Counter, WindowParams } from './Counter';
-import { ICounter, Result } from './ICounter';
+import { Counter, Result } from './Counter';
 import { Limiter } from './Limiter';
 import { LimiterSuite } from './LimiterSuite';
 import { ILimiter } from './ILimiter';
 
-export { IRedisClient, WindowParams, ICounter, Result, ILimiter };
-
-let fixedWindowSrc: string;
-
-/**
- * Creates new counter which implements distributed counter using fixed window algorithm.
- * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
- * @param params Window params.
- */
-export const fixedWindow = (client: IRedisClient, { size, limit }: WindowParams): ICounter => {
-	if (!fixedWindowSrc) {
-		fixedWindowSrc = readFileSync(resolve(__dirname, '../fixedwindow.lua')).toString();
-	}
-	return new Counter(client, { size, limit, src: fixedWindowSrc });
-};
-
-let slidingWindowSrc: string;
-
-/**
- * Creates new counter which implements distributed counter using sliding window algorithm.
- * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
- * @param params Window params.
- */
-export const slidingWindow = (client: IRedisClient, { size, limit }: WindowParams): ICounter => {
-	if (!slidingWindowSrc) {
-		slidingWindowSrc = readFileSync(resolve(__dirname, '../slidingwindow.lua')).toString();
-	}
-	return new Counter(client, { size, limit, src: slidingWindowSrc });
-};
+export { IRedisClient, Counter, Result, ILimiter };
 
 /**
  * Creates new limiter which implements distributed rate limiting.
@@ -60,6 +29,10 @@ export const WindowType = {
 export type WindowType = typeof WindowType[keyof typeof WindowType];
 
 export type LimiterParams = {
+	/** Window size in milliseconds. Must be greater than 0. */
+	size: number;
+	/** Maximum key value per window. Must be greater than 0. */
+	limit: number;
 	/** Unique limiter name, every Redis key will be prefixed with this name. */
 	name?: string;
 	/**
@@ -72,9 +45,9 @@ export type LimiterParams = {
 	 * Must be greater than 0. By default equal 1.
 	 */
 	rate?: number;
-} & WindowParams;
+};
 
 function fromWindowType(client: IRedisClient, { name = String(Math.random()).slice(2), type = WindowType.Fixed, rate = 1, size, limit }: LimiterParams): ILimiter {
-	const counter = type === WindowType.Sliding ? slidingWindow(client, { size, limit }) : fixedWindow(client, { size, limit });
+	const counter = type === WindowType.Sliding ? Counter.slidingWindow(client, size, limit) : Counter.fixedWindow(client, size, limit);
 	return new Limiter(name, rate, counter);
 }

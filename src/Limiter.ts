@@ -1,12 +1,12 @@
-import { ICounter, Result } from './ICounter';
+import { Counter, Result } from './Counter';
 import { ILimiter } from './ILimiter';
 
 export class Limiter implements ILimiter {
 	private name: string;
 	private rate: number;
-	private counter: ICounter;
+	private counter: Counter;
 
-	constructor(name: string, rate: number, counter: ICounter) {
+	constructor(name: string, rate: number, counter: Counter) {
 		this.name = name;
 		this.rate = rate;
 		this.counter = counter;

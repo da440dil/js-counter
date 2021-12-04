@@ -1,9 +1,7 @@
 import { promisify } from 'util';
 import { createClient, RedisClient } from 'redis';
 import { IRedisClient } from '@da440dil/js-redis-script';
-import * as mod from '.';
-import { fixedWindow, slidingWindow, createLimiter, LimiterParams, WindowType } from '.';
-import { Counter } from './Counter';
+import { Counter, createLimiter, LimiterParams, WindowType } from '.';
 import { Limiter } from './Limiter';
 import { LimiterSuite } from './LimiterSuite';
 
@@ -25,7 +23,8 @@ describe('counter', () => {
 
 	it('fixedWindow', async () => {
 		const size = 1000;
-		const counter = fixedWindow(client, { size, limit: 100 });
+		const limit = 100;
+		const counter = Counter.fixedWindow(client, size, limit);
 		expect(counter).toBeInstanceOf(Counter);
 
 		let result = await counter.count(key, 101);
@@ -53,7 +52,7 @@ describe('counter', () => {
 	it('slidingWindow', async () => {
 		const size = 1000;
 		const limit = 100;
-		const counter = slidingWindow(client, { size, limit });
+		const counter = Counter.slidingWindow(client, size, limit);
 		expect(counter).toBeInstanceOf(Counter);
 
 		let result = await counter.count(key, 101);
@@ -102,8 +101,8 @@ describe('counter', () => {
 });
 
 describe('createLimiter', () => {
-	const fixedWindow = jest.spyOn(mod, 'fixedWindow');
-	const slidingWindow = jest.spyOn(mod, 'slidingWindow');
+	const fixedWindow = jest.spyOn(Counter, 'fixedWindow');
+	const slidingWindow = jest.spyOn(Counter, 'slidingWindow');
 
 	afterEach(() => {
 		jest.resetAllMocks();
