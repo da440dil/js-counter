@@ -1,4 +1,4 @@
-import { Result } from './Counter';
+import { Result } from './Result';
 import { ILimiter } from './ILimiter';
 
 const maxInt = Number.MAX_SAFE_INTEGER;
@@ -12,7 +12,7 @@ export class LimiterSuite implements ILimiter {
 
 	public async limit(key: string): Promise<Result> {
 		const results = await Promise.all(this.limiters.map((limiter) => limiter.limit(key)));
-		let result: Result = { ok: true, counter: 0, remainder: maxInt, ttl: -1 };
+		let result = new Result([0, -1], maxInt);
 		for (const v of results) {
 			if (v.ok) {
 				if (result.ok && result.remainder > v.remainder) { // minimal remainder

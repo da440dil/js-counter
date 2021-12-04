@@ -15,7 +15,10 @@ async function main() {
 	const key = 'key';
 	const limit = async (): Promise<void> => {
 		const result = await limiter.limit(key);
-		console.log('Result: %O', result);
+		console.log(
+			'Result: { ok: %s, counter: %d, remainder: %d, ttl: %d }',
+			result.ok, result.counter, result.remainder, result.ttl
+		);
 	};
 
 	await Promise.all([limit(), limit(), limit(), limit()]);

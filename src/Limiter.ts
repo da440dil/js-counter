@@ -1,4 +1,5 @@
-import { Counter, Result } from './Counter';
+import { Counter } from './Counter';
+import { Result } from './Result';
 import { ILimiter } from './ILimiter';
 
 export class Limiter implements ILimiter {

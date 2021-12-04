@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { IRedisClient, IRedisScript, createScript } from '@da440dil/js-redis-script';
+import { Result } from './Result';
 
 const fwsrc = readFileSync(resolve(__dirname, '../fixedwindow.lua')).toString();
 const swsrc = readFileSync(resolve(__dirname, '../slidingwindow.lua')).toString();
@@ -43,26 +44,6 @@ export class Counter {
 	 */
 	public async count(key: string, value: number): Promise<Result> {
 		const res = await this.script.run(key, value, this.size, this.limit);
-		return {
-			ok: res[1] === -1,
-			counter: res[0],
-			remainder: this.limit - res[0],
-			ttl: res[1] === -2 ? 0 : res[1]
-		};
+		return new Result(res, this.limit);
 	}
 }
-
-/** Counter value increment result. */
-export type Result = {
-	/** Operation success flag. */
-	ok: boolean;
-	/** Current counter value. */
-	counter: number;
-	/** Diff between limit and current counter value. */
-	remainder: number;
-	/**
-	 * TTL of the current window in milliseconds.
-	 * Makes sense if operation failed, otherwise ttl is less than 0.
-	 */
-	ttl: number;
-};

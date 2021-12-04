@@ -11,7 +11,10 @@ async function main() {
 	const key = 'key';
 	const count = async (value: number): Promise<Result> => {
 		const result = await counter.count(key, value);
-		console.log('Value: %d, result: %O', value, result);
+		console.log(
+			'Value: %d, result: { ok: %s, counter: %d, remainder: %d, ttl: %d }',
+			value, result.ok, result.counter, result.remainder, result.ttl
+		);
 		return result;
 	};
 

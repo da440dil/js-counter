@@ -1,4 +1,4 @@
-import { Result } from './ICounter';
+import { Result } from './Result';
 
 /**
  * Implements distributed rate limiting. Contains one or more distributed counters.

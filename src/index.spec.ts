@@ -28,13 +28,22 @@ describe('counter', () => {
 		expect(counter).toBeInstanceOf(Counter);
 
 		let result = await counter.count(key, 101);
-		expect(result).toEqual({ ok: false, counter: 0, remainder: 100, ttl: 0 });
+		expect(result.ok).toEqual(false);
+		expect(result.counter).toEqual(0);
+		expect(result.remainder).toEqual(100);
+		expect(result.ttl).toEqual(0);
 
 		result = await counter.count(key, 20);
-		expect(result).toEqual({ ok: true, counter: 20, remainder: 80, ttl: -1 });
+		expect(result.ok).toEqual(true);
+		expect(result.counter).toEqual(20);
+		expect(result.remainder).toEqual(80);
+		expect(result.ttl).toEqual(-1);
 
 		result = await counter.count(key, 30);
-		expect(result).toEqual({ ok: true, counter: 50, remainder: 50, ttl: -1 });
+		expect(result.ok).toEqual(true);
+		expect(result.counter).toEqual(50);
+		expect(result.remainder).toEqual(50);
+		expect(result.ttl).toEqual(-1);
 
 		result = await counter.count(key, 51);
 		expect(result.ok).toEqual(false);
@@ -46,7 +55,10 @@ describe('counter', () => {
 		await sleep(result.ttl + 100); // wait for the next window to start
 
 		result = await counter.count(key, 70);
-		expect(result).toEqual({ ok: true, counter: 70, remainder: 30, ttl: -1 });
+		expect(result.ok).toEqual(true);
+		expect(result.counter).toEqual(70);
+		expect(result.remainder).toEqual(30);
+		expect(result.ttl).toEqual(-1);
 	});
 
 	it('slidingWindow', async () => {
@@ -65,10 +77,16 @@ describe('counter', () => {
 		await sleep(result.ttl); // wait for the next window to start
 
 		result = await counter.count(key, 20);
-		expect(result).toEqual({ ok: true, counter: 20, remainder: 80, ttl: -1 });
+		expect(result.ok).toEqual(true);
+		expect(result.counter).toEqual(20);
+		expect(result.remainder).toEqual(80);
+		expect(result.ttl).toEqual(-1);
 
 		result = await counter.count(key, 30);
-		expect(result).toEqual({ ok: true, counter: 50, remainder: 50, ttl: -1 });
+		expect(result.ok).toEqual(true);
+		expect(result.counter).toEqual(50);
+		expect(result.remainder).toEqual(50);
+		expect(result.ttl).toEqual(-1);
 
 		result = await counter.count(key, 51);
 		expect(result.ok).toEqual(false);

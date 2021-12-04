@@ -1,5 +1,6 @@
 import { IRedisClient } from '@da440dil/js-redis-script';
-import { Counter, Result } from './Counter';
+import { Counter } from './Counter';
+import { Result } from './Result';
 import { Limiter } from './Limiter';
 import { LimiterSuite } from './LimiterSuite';
 import { ILimiter } from './ILimiter';

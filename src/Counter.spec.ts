@@ -31,12 +31,12 @@ const ts: { name: string; counter: Counter; }[] = [
 for (const { name, counter } of ts) {
 	it(`Counter.${name}`, async () => {
 		run.mockImplementation(() => Promise.resolve([1, -2]));
-		await expect(counter.count('', 1)).resolves.toEqual({ ok: false, counter: 1, remainder: 99, ttl: 0 });
+		await expect(counter.count('', 1)).resolves.toMatchObject({ ok: false, counter: 1, remainder: 99, ttl: 0 });
 
 		run.mockImplementation(() => Promise.resolve([1, -1]));
-		await expect(counter.count('', 1)).resolves.toEqual({ ok: true, counter: 1, remainder: 99, ttl: -1 });
+		await expect(counter.count('', 1)).resolves.toMatchObject({ ok: true, counter: 1, remainder: 99, ttl: -1 });
 
 		run.mockImplementation(() => Promise.resolve([74, 75]));
-		await expect(counter.count('', 1)).resolves.toEqual({ ok: false, counter: 74, remainder: 26, ttl: 75 });
+		await expect(counter.count('', 1)).resolves.toMatchObject({ ok: false, counter: 74, remainder: 26, ttl: 75 });
 	});
 }
