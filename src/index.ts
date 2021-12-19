@@ -1,11 +1,31 @@
 import { IRedisClient } from '@da440dil/js-redis-script';
-import { Counter } from './Counter';
+import { Counter, Algorithm } from './Counter';
 import { Result } from './Result';
 import { Limiter } from './Limiter';
-import { LimiterSuite } from './LimiterSuite';
+import { BatchLimiter } from './BatchLimiter';
 import { ILimiter } from './ILimiter';
 
-export { IRedisClient, Counter, Result, ILimiter };
+export { IRedisClient, Counter, Result, Algorithm, ILimiter };
+
+/**
+ * Creates new counter which implements distributed counter using fixed window algorithm.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param size Window size in milliseconds. Must be greater than 0.
+ * @param limit Maximum key value per window. Must be greater than 0.
+ */
+export const fixedWindow = (client: IRedisClient, size: number, limit: number): Counter => {
+	return new Counter(client, size, limit, Algorithm.Fixed);
+};
+
+/**
+ * Creates new counter which implements distributed counter using sliding window algorithm.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param size Window size in milliseconds. Must be greater than 0.
+ * @param limit Maximum key value per window. Must be greater than 0.
+ */
+export const slidingWindow = (client: IRedisClient, size: number, limit: number): Counter => {
+	return new Counter(client, size, limit, Algorithm.Sliding);
+};
 
 /**
  * Creates new limiter which implements distributed rate limiting.
@@ -15,17 +35,30 @@ export { IRedisClient, Counter, Result, ILimiter };
  */
 export const createLimiter = (client: IRedisClient, first: Params, ...rest: Params[]): ILimiter => {
 	if (rest.length === 0) {
-		return fromAlgorithm(client, first);
+		const { size, limit, prefix, rate, algorithm } = withDefaults(first);
+		const counter = new Counter(client, size, limit, algorithm);
+		return new Limiter(counter, prefix, rate);
 	}
-	return new LimiterSuite([first].concat(rest).map((v) => fromAlgorithm(client, v)));
+	const params = [first].concat(rest).map(withDefaults);
+	const prefixes: string[] = [];
+	const args: number[] = [];
+	for (const param of params) {
+		prefixes.push(param.prefix);
+		args.push(param.rate, param.size, param.limit, param.algorithm);
+	}
+	return new BatchLimiter(client, prefixes, args);
 };
 
+/** Params to build limiter. */
 export type Params = {
 	/** Window size in milliseconds. Must be greater than 0. */
 	size: number;
 	/** Maximum key value per window. Must be greater than 0. */
 	limit: number;
-	/** Unique limiter name, every Redis key will be prefixed with this name. */
+	/** 
+	 * Unique limiter name, every Redis key will be prefixed with this name.
+	 * By default is pseudo-random string.
+	 */
 	name?: string;
 	/**
 	 * The rate of decreasing the window size on each next limiter call.
@@ -33,22 +66,18 @@ export type Params = {
 	 */
 	rate?: number;
 	/**
-	 * One of algorithms: "fixed" for the fixed window algorithm, "sliding" for the sliding window algorithm.
-	 * By default equal "fixed".
+	 * One of algorithms: 1 stands for the fixed window algorithm, 2 stands for the sliding window algorithm.
+	 * By default equal 1.
 	 */
 	algorithm?: Algorithm;
 };
 
-export const Algorithm = {
-	/** Fixed window. */
-	Fixed: 'fixed',
-	/** Sliding window. */
-	Sliding: 'sliding'
-} as const;
-
-export type Algorithm = typeof Algorithm[keyof typeof Algorithm];
-
-function fromAlgorithm(client: IRedisClient, { size, limit, name = String(Math.random()).slice(2), rate = 1, algorithm = Algorithm.Fixed }: Params): ILimiter {
-	const counter = algorithm === Algorithm.Sliding ? Counter.slidingWindow(client, size, limit) : Counter.fixedWindow(client, size, limit);
-	return new Limiter(counter, name, rate);
+function withDefaults(params: Params): Required<Omit<Params, 'name'>> & { prefix: string; } {
+	return {
+		size: params.size,
+		limit: params.limit,
+		prefix: params.name ? `${params.name}:` : `${String(Math.random()).slice(2)}:`,
+		rate: params.rate || 1,
+		algorithm: params.algorithm === Algorithm.Sliding ? Algorithm.Sliding : Algorithm.Fixed
+	};
 }

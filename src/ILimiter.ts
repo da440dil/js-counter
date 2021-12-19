@@ -5,7 +5,7 @@ import { Result } from './Result';
  */
 export interface ILimiter {
 	/**
-	 * Applies limit: Increments key value of each distributed counter.
+	 * Applies the limit: increments key value of each distributed counter.
 	 * @param key The key to be incremented.
 	 */
 	limit(key: string): Promise<Result>;

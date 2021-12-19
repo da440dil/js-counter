@@ -7,9 +7,9 @@ export class Limiter implements ILimiter {
 	private prefix: string;
 	private rate: number;
 
-	constructor(counter: Counter, name: string, rate: number) {
+	constructor(counter: Counter, prefix: string, rate: number) {
 		this.counter = counter;
-		this.prefix = `${name}:`;
+		this.prefix = prefix;
 		this.rate = rate;
 	}
 

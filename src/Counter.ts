@@ -6,35 +6,26 @@ import { Result } from './Result';
 const fwsrc = readFileSync(resolve(__dirname, '../fixedwindow.lua')).toString();
 const swsrc = readFileSync(resolve(__dirname, '../slidingwindow.lua')).toString();
 
+/** One of algorithms: 1 stands for the fixed window algorithm, 2 stands for the sliding window algorithm. */
+export const Algorithm = {
+	/** Fixed window. */
+	Fixed: 1,
+	/** Sliding window. */
+	Sliding: 2
+} as const;
+
+export type Algorithm = typeof Algorithm[keyof typeof Algorithm];
+
+/** Implements distributed counter. */
 export class Counter {
-	/**
-	 * Creates new counter which implements distributed counter using fixed window algorithm.
-	 * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
-	 * @param size Window size in milliseconds. Must be greater than 0.
-	 * @param limit Maximum key value per window. Must be greater than 0.
-	 */
-	public static fixedWindow(client: IRedisClient, size: number, limit: number): Counter {
-		return new Counter(client, size, limit, fwsrc);
-	}
-
-	/**
-	 * Creates new counter which implements distributed counter using sliding window algorithm.
-	 * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
-	 * @param size Window size in milliseconds. Must be greater than 0.
-	 * @param limit Maximum key value per window. Must be greater than 0.
-	 */
-	public static slidingWindow(client: IRedisClient, size: number, limit: number): Counter {
-		return new Counter(client, size, limit, swsrc);
-	}
-
 	private size: number;
 	private limit: number;
-	private script: IRedisScript<[number, number]>;
+	private script: IRedisScript<Response>;
 
-	private constructor(client: IRedisClient, size: number, limit: number, src: string) {
+	constructor(client: IRedisClient, size: number, limit: number, algorithm: Algorithm) {
 		this.size = size;
 		this.limit = limit;
-		this.script = createScript<[number, number]>({ client, src, numberOfKeys: 1 });
+		this.script = createScript<Response>({ client, src: algorithm === Algorithm.Sliding ? swsrc : fwsrc, numberOfKeys: 1 });
 	}
 
 	/**
@@ -43,7 +34,9 @@ export class Counter {
 	 * @param value The value the key value to be incremented by.
 	 */
 	public async count(key: string, value: number): Promise<Result> {
-		const res = await this.script.run(key, value, this.size, this.limit);
-		return new Result(res, this.limit);
+		const v = await this.script.run(key, value, this.size, this.limit);
+		return new Result(v[0], v[1], this.limit);
 	}
 }
+
+type Response = [number, number];

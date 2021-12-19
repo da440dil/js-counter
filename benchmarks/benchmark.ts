@@ -1,6 +1,6 @@
 import { hrtime } from 'process';
 import { createClient, RedisClient } from 'redis';
-import { fixedWindow, slidingWindow, ICounter } from '../src';
+import { fixedWindow, slidingWindow, Counter } from '../src';
 
 async function main() {
 	const client = createClient();
@@ -23,10 +23,10 @@ async function app(client: RedisClient): Promise<void> {
 	const size = 60000;
 	const limit = batchSize + 1;
 
-	const fixedWindowCounter = fixedWindow(client, { size, limit });
+	const fixedWindowCounter = fixedWindow(client, size, limit);
 	const fixedWindowTime = await test(client, fixedWindowCounter, key, value, batchSize);
 
-	const slidingWindowCounter = slidingWindow(client, { size, limit });
+	const slidingWindowCounter = slidingWindow(client, size, limit);
 	const slidingWindowTime = await test(client, slidingWindowCounter, key, value, batchSize);
 
 	console.table({
@@ -43,7 +43,7 @@ async function app(client: RedisClient): Promise<void> {
 	});
 }
 
-async function test(client: RedisClient, counter: ICounter, key: string, value: number, batchSize: number): Promise<number> {
+async function test(client: RedisClient, counter: Counter, key: string, value: number, batchSize: number): Promise<number> {
 	await counter.count(key, value);
 	const start = hrtime.bigint();
 	await Promise.all(Array.from({ length: batchSize }, () => counter.count(key, value)));

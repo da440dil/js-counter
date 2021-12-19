@@ -1,28 +1,28 @@
-export type Response = [number, number];
-
 /** Counter value increment result. */
 export class Result {
-	private response: Response;
+	private c: number;
+	private t: number;
 	private limit: number;
 
-	constructor(response: Response, limit: number) {
-		this.response = response;
+	constructor(counter: number, ttl: number, limit: number) {
+		this.c = counter;
+		this.t = ttl;
 		this.limit = limit;
 	}
 
 	/** Operation success flag. */
 	get ok(): boolean {
-		return this.response[1] === -1;
+		return this.t === -1;
 	}
 
 	/** Current counter value. */
 	get counter(): number {
-		return this.response[0];
+		return this.c;
 	}
 
 	/** Diff between limit and current counter value. */
 	get remainder(): number {
-		return this.limit - this.response[0];
+		return this.limit - this.c;
 	}
 
 	/**
@@ -30,9 +30,6 @@ export class Result {
 	 * Makes sense if operation failed, otherwise ttl is less than 0.
 	 */
 	get ttl(): number {
-		if (this.response[1] === -2) {
-			return 0;
-		}
-		return this.response[1];
+		return this.t;
 	}
 }
