@@ -9,7 +9,7 @@ Distributed rate limiting using [Redis](https://redis.io/).
 ```typescript
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { createLimiter } from '../src';
+import { createLimiter } from '@da440dil/js-counter';
 
 const sleep = promisify(setTimeout);
 
