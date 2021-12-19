@@ -9,22 +9,28 @@ Distributed rate limiting using [Redis](https://redis.io/).
 ```typescript
 import { promisify } from 'util';
 import { createClient } from 'redis';
-import { createLimiter } from '@da440dil/js-counter';
+import { createLimiter } from '../src';
 
 const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
+	// Create limiter with 2 limiters.
 	const limiter = createLimiter(
 		client,
-		{ name: '1s', size: 1000, limit: 3 },
-		{ name: '2s', size: 2000, limit: 5 }
+		// First limiter is limited to 3 calls per second.
+		{ size: 1000, limit: 3 },
+		// Second limiter is limited to 5 calls per 2 seconds.
+		{ size: 2000, limit: 5 }
 	);
 
 	const key = 'key';
 	const limit = async (): Promise<void> => {
 		const result = await limiter.limit(key);
-		console.log('Result: %O', result);
+		console.log(
+			'Result: { ok: %s, counter: %d, remainder: %d, ttl: %d }',
+			result.ok, result.counter, result.remainder, result.ttl
+		);
 	};
 
 	await Promise.all([limit(), limit(), limit(), limit()]);
