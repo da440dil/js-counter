@@ -30,8 +30,8 @@ export const slidingWindow = (client: IRedisClient, size: number, limit: number)
 /**
  * Creates new limiter which implements distributed rate limiting.
  * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
- * @param first Params of the first limiter.
- * @param rest Params of the rest limiters.
+ * @param first Params of the first limit.
+ * @param rest Params of the rest limits.
  */
 export const createLimiter = (client: IRedisClient, first: Params, ...rest: Params[]): ILimiter => {
 	if (rest.length === 0) {
@@ -49,19 +49,19 @@ export const createLimiter = (client: IRedisClient, first: Params, ...rest: Para
 	return new BatchLimiter(client, prefixes, args);
 };
 
-/** Params to build limiter. */
+/** Parameters to build a limit. */
 export type Params = {
 	/** Window size in milliseconds. Must be greater than 0. */
 	size: number;
 	/** Maximum key value per window. Must be greater than 0. */
 	limit: number;
 	/** 
-	 * Unique limiter name, every Redis key will be prefixed with this name.
+	 * Unique limit name, every Redis key will be prefixed with this name.
 	 * By default is pseudo-random string.
 	 */
 	name?: string;
 	/**
-	 * The rate of decreasing the window size on each next limiter call.
+	 * The rate of decreasing the window size on each next application of the limit.
 	 * Must be greater than 0. By default equal 1.
 	 */
 	rate?: number;

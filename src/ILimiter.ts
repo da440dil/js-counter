@@ -1,11 +1,11 @@
 import { Result } from './Result';
 
 /**
- * Implements distributed rate limiting. Contains one or more distributed counters.
+ * Implements distributed rate limiting.
  */
 export interface ILimiter {
 	/**
-	 * Applies the limit: increments key value of each distributed counter.
+	 * Applies the limit.
 	 * @param key The key to be incremented.
 	 */
 	limit(key: string): Promise<Result>;

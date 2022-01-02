@@ -6,12 +6,12 @@ const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
-	// Create limiter with 2 limiters.
+	// Create limiter with 2 limits.
 	const limiter = createLimiter(
 		client,
-		// First limiter is limited to 3 calls per second.
+		// First limit: no more than 3 limiter calls within 1 second.
 		{ size: 1000, limit: 3 },
-		// Second limiter is limited to 5 calls per 2 seconds.
+		// Second limit: no more than 5 limiter calls within 2 seconds.
 		{ size: 2000, limit: 5 }
 	);
 
