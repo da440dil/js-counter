@@ -1,20 +1,20 @@
 import { promisify } from 'util';
-import { createClient, RedisClient } from 'redis';
+import { createClient } from 'redis';
 import { fixedWindow, slidingWindow } from '.';
 
 const sleep = promisify(setTimeout);
 
-let client: RedisClient;
-beforeAll(() => {
-	client = createClient();
+const client = createClient();
+beforeAll(async () => {
+	await client.connect();
 });
-afterAll((cb) => {
-	client.quit(cb);
+afterAll(async () => {
+	await client.quit();
 });
 
 const key = 'key';
-beforeEach((cb) => {
-	client.del(key, cb);
+beforeEach(async () => {
+	await client.del(key);
 });
 
 it('fixedWindow', async () => {

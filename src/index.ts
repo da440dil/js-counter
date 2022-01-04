@@ -1,39 +1,39 @@
-import { IRedisClient } from '@da440dil/js-redis-script';
+import { IRedisClient, INodeRedisClient } from '@da440dil/js-redis-script';
 import { Counter, Algorithm } from './Counter';
 import { Result } from './Result';
 import { Limiter } from './Limiter';
 import { BatchLimiter } from './BatchLimiter';
 import { ILimiter } from './ILimiter';
 
-export { IRedisClient, Counter, Result, Algorithm, ILimiter };
+export { IRedisClient, INodeRedisClient, Counter, Result, Algorithm, ILimiter };
 
 /**
  * Creates new counter which implements distributed counter using fixed window algorithm.
- * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) v3 or v4 or [ioredis](https://github.com/luin/ioredis) v4.
  * @param size Window size in milliseconds. Must be greater than 0.
  * @param limit Maximum key value per window. Must be greater than 0.
  */
-export const fixedWindow = (client: IRedisClient, size: number, limit: number): Counter => {
+export const fixedWindow = (client: IRedisClient | INodeRedisClient, size: number, limit: number): Counter => {
 	return new Counter(client, size, limit, Algorithm.Fixed);
 };
 
 /**
  * Creates new counter which implements distributed counter using sliding window algorithm.
- * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) v3 or v4 or [ioredis](https://github.com/luin/ioredis) v4.
  * @param size Window size in milliseconds. Must be greater than 0.
  * @param limit Maximum key value per window. Must be greater than 0.
  */
-export const slidingWindow = (client: IRedisClient, size: number, limit: number): Counter => {
+export const slidingWindow = (client: IRedisClient | INodeRedisClient, size: number, limit: number): Counter => {
 	return new Counter(client, size, limit, Algorithm.Sliding);
 };
 
 /**
  * Creates new limiter which implements distributed rate limiting.
- * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) and [ioredis](https://github.com/luin/ioredis) both implement it.
+ * @param client Minimal Redis client interface: [node-redis](https://github.com/NodeRedis/node-redis) v3 or v4 or [ioredis](https://github.com/luin/ioredis) v4.
  * @param first Params of the first limit.
  * @param rest Params of the rest limits.
  */
-export const createLimiter = (client: IRedisClient, first: Params, ...rest: Params[]): ILimiter => {
+export const createLimiter = (client: IRedisClient | INodeRedisClient, first: Params, ...rest: Params[]): ILimiter => {
 	if (rest.length === 0) {
 		const { size, limit, prefix, rate, algorithm } = withDefaults(first);
 		const counter = new Counter(client, size, limit, algorithm);

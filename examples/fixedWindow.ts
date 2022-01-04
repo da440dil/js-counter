@@ -6,6 +6,8 @@ const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
+	await client.connect();
+
 	const counter = fixedWindow(client, 1000, 100);
 
 	const key = 'key';
@@ -29,7 +31,7 @@ async function main() {
 	// Value: 51, result: { ok: false, counter: 50, remainder: 50, ttl: 1000 }
 	// Value: 70, result: { ok: true, counter: 70, remainder: 30, ttl: -1 }
 
-	client.quit();
+	await client.quit();
 }
 
 main().catch((err) => {

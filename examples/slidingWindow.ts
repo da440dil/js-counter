@@ -6,6 +6,8 @@ const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
+	await client.connect();
+
 	const counter = slidingWindow(client, 1000, 100);
 
 	const key = 'key';
@@ -33,7 +35,7 @@ async function main() {
 	// Value: 70, result: { ok: false, counter: 49, remainder: 51, ttl: 985 }
 	// Value: 70, result: { ok: true, counter: 83, remainder: 17, ttl: -1 }
 
-	client.quit();
+	await client.quit();
 }
 
 main().catch((err) => {

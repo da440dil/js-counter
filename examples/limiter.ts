@@ -6,6 +6,8 @@ const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
+	await client.connect();
+
 	// Create limiter with 2 limits.
 	const limiter = createLimiter(
 		client,
@@ -35,7 +37,7 @@ async function main() {
 	// Result: { ok: true, counter: 5, remainder: 0, ttl: -1 }
 	// Result: { ok: false, counter: 5, remainder: 0, ttl: 990 }
 
-	client.quit();
+	await client.quit();
 }
 
 main().catch((err) => {

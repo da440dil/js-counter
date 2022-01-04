@@ -1,11 +1,12 @@
 import { hrtime } from 'process';
-import { createClient, RedisClient } from 'redis';
+import { createClient, RedisClientType } from 'redis';
 import { fixedWindow, slidingWindow, Counter, Result, createLimiter, ILimiter } from '../src';
 
 async function main() {
 	const client = createClient();
-	await app(client);
-	client.quit();
+	await client.connect();
+	await app(client as RedisClientType);
+	await client.quit();
 }
 
 main().catch((err) => {
@@ -13,8 +14,8 @@ main().catch((err) => {
 	process.exit(1);
 });
 
-async function app(client: RedisClient): Promise<void> {
-	await flushdb(client);
+async function app(client: RedisClientType): Promise<void> {
+	await client.FLUSHDB();
 
 	const key = 'test';
 	const value = 1;
@@ -75,32 +76,21 @@ async function app(client: RedisClient): Promise<void> {
 	});
 }
 
-async function testCounter(client: RedisClient, counter: Counter, key: string, value: number, batchSize: number): Promise<number> {
+async function testCounter(client: RedisClientType, counter: Counter, key: string, value: number, batchSize: number): Promise<number> {
 	return test(client, batchSize, () => counter.count(key, value));
 }
 
-async function testLimiter(client: RedisClient, limiter: ILimiter, key: string, batchSize: number): Promise<number> {
+async function testLimiter(client: RedisClientType, limiter: ILimiter, key: string, batchSize: number): Promise<number> {
 	return test(client, batchSize, () => limiter.limit(key));
 }
 
-async function test(client: RedisClient, batchSize: number, fn: () => Promise<Result>): Promise<number> {
+async function test(client: RedisClientType, batchSize: number, fn: () => Promise<Result>): Promise<number> {
 	await fn();
 	const start = hrtime.bigint();
 	await Promise.all(Array.from({ length: batchSize }, fn));
 	const end = hrtime.bigint();
-	await flushdb(client);
+	await client.FLUSHDB();
 	return Math.round(Number(end - start) * 1e-6 * 100) / 100;
-}
-
-function flushdb(client: RedisClient): Promise<void> {
-	return new Promise<void>((resolve, reject) => {
-		client.flushdb((err) => {
-			if (err) {
-				return reject(err);
-			}
-			resolve();
-		});
-	});
 }
 
 function toReqPerSec(batchSize: number, timeMs: number): number {

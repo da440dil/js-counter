@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { IRedisClient, IRedisScript, createScript } from '@da440dil/js-redis-script';
+import { createScript, IRedisClient, INodeRedisClient, IRedisScript } from '@da440dil/js-redis-script';
 import { Result } from './Result';
 import { ILimiter } from './ILimiter';
 
@@ -11,8 +11,8 @@ export class BatchLimiter implements ILimiter {
 	private prefixes: string[] = [];
 	private args: number[] = [];
 
-	constructor(client: IRedisClient, prefixes: string[], args: number[]) {
-		this.script = createScript<Response>({ client, src, numberOfKeys: prefixes.length });
+	constructor(client: IRedisClient | INodeRedisClient, prefixes: string[], args: number[]) {
+		this.script = createScript<Response>(client, src, prefixes.length);
 		this.prefixes = prefixes;
 		this.args = args;
 	}

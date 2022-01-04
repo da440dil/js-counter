@@ -5,7 +5,9 @@
 
 Distributed rate limiting using [Redis](https://redis.io/).
 
-[Example](./examples/limiter.ts) usage:
+Supported Redis clients: [node-redis](https://github.com/NodeRedis/node-redis) v3 and v4, [ioredis](https://github.com/luin/ioredis) v4.
+
+[Example](./examples/limiter.ts) usage with [node-redis](https://github.com/NodeRedis/node-redis) v4:
 ```typescript
 import { promisify } from 'util';
 import { createClient } from 'redis';
@@ -15,6 +17,8 @@ const sleep = promisify(setTimeout);
 
 async function main() {
 	const client = createClient();
+	await client.connect();
+
 	// Create limiter with 2 limits.
 	const limiter = createLimiter(
 		client,
@@ -44,7 +48,7 @@ async function main() {
 	// Result: { ok: true, counter: 5, remainder: 0, ttl: -1 }
 	// Result: { ok: false, counter: 5, remainder: 0, ttl: 990 }
 
-	client.quit();
+	await client.quit();
 }
 
 main().catch((err) => {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { IRedisClient, IRedisScript, createScript } from '@da440dil/js-redis-script';
+import { createScript, IRedisClient, INodeRedisClient, IRedisScript } from '@da440dil/js-redis-script';
 import { Result } from './Result';
 
 const fwsrc = readFileSync(resolve(__dirname, '../fixedwindow.lua')).toString();
@@ -22,10 +22,10 @@ export class Counter {
 	private limit: number;
 	private script: IRedisScript<Response>;
 
-	constructor(client: IRedisClient, size: number, limit: number, algorithm: Algorithm) {
+	constructor(client: IRedisClient | INodeRedisClient, size: number, limit: number, algorithm: Algorithm) {
 		this.size = size;
 		this.limit = limit;
-		this.script = createScript<Response>({ client, src: algorithm === Algorithm.Sliding ? swsrc : fwsrc, numberOfKeys: 1 });
+		this.script = createScript<Response>(client, algorithm === Algorithm.Sliding ? swsrc : fwsrc, 1);
 	}
 
 	/**
