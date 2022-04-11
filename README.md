@@ -41,12 +41,12 @@ async function main() {
 	await sleep(1000); // wait for the next window to start
 	await Promise.all([limit(), limit()]);
 	// Output:
-	// Result: { ok: true, counter: 1, remainder: 2, ttl: -1 }
-	// Result: { ok: true, counter: 2, remainder: 1, ttl: -1 }
-	// Result: { ok: true, counter: 3, remainder: 0, ttl: -1 }
+	// Result: { ok: true, counter: 1, remainder: 2, ttl: 1000 }
+	// Result: { ok: true, counter: 2, remainder: 1, ttl: 1000 }
+	// Result: { ok: true, counter: 3, remainder: 0, ttl: 1000 }
 	// Result: { ok: false, counter: 3, remainder: 0, ttl: 1000 }
-	// Result: { ok: true, counter: 5, remainder: 0, ttl: -1 }
-	// Result: { ok: false, counter: 5, remainder: 0, ttl: 990 }
+	// Result: { ok: true, counter: 5, remainder: 0, ttl: 978 }
+	// Result: { ok: false, counter: 5, remainder: 0, ttl: 978 }
 
 	await client.quit();
 }

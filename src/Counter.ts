@@ -35,8 +35,8 @@ export class Counter {
 	 */
 	public async count(key: string, value: number): Promise<Result> {
 		const v = await this.script.run(key, value, this.size, this.limit);
-		return new Result(v[0], v[1], this.limit);
+		return { ok: v[0] === 1, counter: v[1], remainder: this.limit - v[1], ttl: v[2] };
 	}
 }
 
-type Response = [number, number];
+type Response = [number, number, number];

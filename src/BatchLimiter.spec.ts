@@ -24,10 +24,10 @@ const args = [rate, size, limit, Algorithm.Fixed, rate, size, limit, Algorithm.F
 
 it('should return result', async () => {
 	const limiter = new BatchLimiter(client, prefixes, args);
-	run.mockImplementation(() => Promise.resolve([1, -1, limit]));
+	run.mockImplementation(() => Promise.resolve([1, 1, size, limit]));
 	const result = await limiter.limit('');
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toEqual(1);
 	expect(result.remainder).toEqual(limit - 1);
-	expect(result.ttl).toEqual(-1);
+	expect(result.ttl).toEqual(size);
 });

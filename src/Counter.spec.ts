@@ -32,19 +32,20 @@ it('fixedWindow', async () => {
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toEqual(20);
 	expect(result.remainder).toEqual(80);
-	expect(result.ttl).toEqual(-1);
+	expect(result.ttl).toEqual(size);
 
 	result = await counter.count(key, 30);
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toEqual(50);
 	expect(result.remainder).toEqual(50);
-	expect(result.ttl).toEqual(-1);
+	expect(result.ttl).toBeGreaterThan(0);
+	expect(result.ttl).toBeLessThanOrEqual(size);
 
 	result = await counter.count(key, 51);
 	expect(result.ok).toEqual(false);
 	expect(result.counter).toEqual(50);
 	expect(result.remainder).toEqual(50);
-	expect(result.ttl).toBeGreaterThanOrEqual(0);
+	expect(result.ttl).toBeGreaterThan(0);
 	expect(result.ttl).toBeLessThanOrEqual(size);
 
 	await sleep(result.ttl + 100); // wait for the next window to start
@@ -53,7 +54,8 @@ it('fixedWindow', async () => {
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toEqual(70);
 	expect(result.remainder).toEqual(30);
-	expect(result.ttl).toEqual(-1);
+	expect(result.ttl).toBeGreaterThan(0);
+	expect(result.ttl).toBeLessThanOrEqual(size);
 });
 
 it('slidingWindow', async () => {
@@ -74,13 +76,15 @@ it('slidingWindow', async () => {
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toEqual(20);
 	expect(result.remainder).toEqual(80);
-	expect(result.ttl).toEqual(-1);
+	expect(result.ttl).toBeGreaterThanOrEqual(0);
+	expect(result.ttl).toBeLessThanOrEqual(size);
 
 	result = await counter.count(key, 30);
 	expect(result.ok).toEqual(true);
 	expect(result.counter).toEqual(50);
 	expect(result.remainder).toEqual(50);
-	expect(result.ttl).toEqual(-1);
+	expect(result.ttl).toBeGreaterThanOrEqual(0);
+	expect(result.ttl).toBeLessThanOrEqual(size);
 
 	result = await counter.count(key, 51);
 	expect(result.ok).toEqual(false);
@@ -108,5 +112,6 @@ it('slidingWindow', async () => {
 	expect(result.counter).toBeLessThanOrEqual(limit);
 	expect(result.remainder).toBeGreaterThanOrEqual(0);
 	expect(result.remainder).toBeLessThanOrEqual(30);
-	expect(result.ttl).toEqual(-1);
+	expect(result.ttl).toBeGreaterThanOrEqual(0);
+	expect(result.ttl).toBeLessThanOrEqual(size);
 });

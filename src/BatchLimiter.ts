@@ -19,8 +19,8 @@ export class BatchLimiter implements ILimiter {
 
 	public async limit(key: string): Promise<Result> {
 		const v = await this.script.run(...this.prefixes.map((v) => `${v}${key}`), ...this.args);
-		return new Result(v[0], v[1], v[2]);
+		return { ok: v[0] === 1, counter: v[1], remainder: v[3] - v[1], ttl: v[2] };
 	}
 }
 
-type Response = [number, number, number];
+type Response = [number, number, number, number];
