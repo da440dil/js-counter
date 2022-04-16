@@ -1,3 +1,4 @@
+/** Counter value increment result. */
 export type Result = {
 	/** Operation success flag. */
 	ok: boolean;

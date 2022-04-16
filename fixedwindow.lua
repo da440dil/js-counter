@@ -16,4 +16,4 @@ local function fixedWindow(key, value, size, limit)
 	end
 	return { 1, redis.call("incrby", key, value), redis.call("pttl", key) }
 end
-return fixedWindow(KEYS[1], ARGV[1], ARGV[2], tonumber(ARGV[3]));
+return fixedWindow(KEYS[1], ARGV[1], ARGV[2], tonumber(ARGV[3]))

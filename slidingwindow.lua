@@ -25,4 +25,4 @@ local function slidingWindow(key, value, size, limit)
 	end
 	return { 1, counter, currWindowRemainingDuration }
 end
-return slidingWindow(KEYS[1], ARGV[1], ARGV[2], tonumber(ARGV[3]));
+return slidingWindow(KEYS[1], ARGV[1], ARGV[2], tonumber(ARGV[3]))
